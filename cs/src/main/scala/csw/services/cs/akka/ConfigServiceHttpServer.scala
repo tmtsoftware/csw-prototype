@@ -10,7 +10,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.cs.core.{ConfigData, ConfigId}
 import csw.services.loc.{LocationService, ComponentType, ComponentId}
 import org.slf4j.LoggerFactory

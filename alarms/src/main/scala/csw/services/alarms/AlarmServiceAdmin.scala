@@ -4,7 +4,7 @@ import java.io._
 
 import akka.actor.{ActorRef, ActorRefFactory}
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem

@@ -2,12 +2,12 @@ package csw.util.config
 
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.Events.{EventInfo, EventTime, SystemEvent}
-import org.scalatest.{FunSpec, ShouldMatchers}
+import org.scalatest.{FunSpec, Matchers}
 
 /**
  * TMT Source Code: 8/17/16.
  */
-class EventTests extends FunSpec with ShouldMatchers {
+class EventTests extends FunSpec with Matchers {
   private val s1: String = "encoder"
   private val s2: String = "filter"
   private val s3: String = "detectorTemp"

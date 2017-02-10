@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.{OtherIssue, ValidationIssue, WrongInternalStateIssue}
 import csw.util.config.Configurations.{ObserveConfig, SequenceConfig, SetupConfig}

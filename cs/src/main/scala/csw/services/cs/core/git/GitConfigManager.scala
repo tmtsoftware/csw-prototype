@@ -6,7 +6,7 @@ import java.nio.file.Files
 import java.util.Date
 
 import akka.actor.ActorRefFactory
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
 import csw.services.cs.core.{ConfigIdImpl, _}
 import net.codejava.security.HashGeneratorUtils

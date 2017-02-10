@@ -2,7 +2,7 @@ package csw.services.loc
 
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.ComponentType._
 import csw.services.loc.Connection._
 import csw.services.loc.LocationService.{AkkaRegistration, ComponentRegistered, HttpRegistration, RegistrationTracker}
@@ -170,10 +170,8 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     val actorTestProbe = TestProbe()
 
-    val fList = List(
-      LocationService.registerHttpConnection(componentId, testPort),
-      LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
-    )
+    val reg1 = Await.result(LocationService.registerHttpConnection(componentId, testPort), 5.seconds)
+    val reg2 = Await.result(LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix), 5.seconds);
 
     val tracker = system.actorOf(LocationTracker.props(Some(testProbe.ref)))
 
@@ -181,23 +179,15 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val hc = HttpConnection(componentId)
 
     tracker ! TrackConnection(ac)
-    //    testProbe.expectMsg(20.seconds, Unresolved(ac))
     val r1 = testProbe.expectMsgClass(20.seconds, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
-    //    expectNoMsg(5.seconds) // Give time for all to be registered
-
     tracker ! TrackConnection(hc)
-    //    testProbe.expectMsg(20.seconds, Unresolved(hc))
     val r2 = testProbe.expectMsgClass(20.seconds, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
 
-    // Assure no messages coming for no tracking
-    //    testProbe.expectNoMsg(5.seconds)
-
-    val f = Future.sequence(fList)
-    val resultList = Await.result(f, 10.seconds)
-    resultList.foreach(_.unregister())
+    reg1.unregister()
+    reg2.unregister()
     system.stop(tracker)
   }
 
@@ -231,26 +221,18 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     tracker ! TrackConnection(ac)
     tracker ! TrackConnection(hc)
-    //    testProbe.expectMsg(t, Unresolved(ac))
-    //    testProbe.expectMsg(t, Unresolved(hc))
 
-    // Assure no messages coming for no tracking
-    //    testProbe.expectNoMsg(5.seconds)
-
-    val f1 = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
+    val reg1 = Await.result(LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix), 5.seconds)
 
     val r1 = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
-    val f2 = LocationService.registerHttpConnection(componentId, testPort)
+    val reg2 = Await.result(LocationService.registerHttpConnection(componentId, testPort), 5.seconds)
     val r2 = testProbe.expectMsgClass(t, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
-    // Assure no messages coming for no tracking
-    //    testProbe.expectNoMsg(5.seconds)
 
-    val f = Future.sequence(List(f1, f2))
-    val resultList = Await.result(f, 1.second)
-    resultList.foreach(_.unregister())
+    reg1.unregister()
+    reg2.unregister()
     system.stop(tracker)
   }
 
@@ -272,19 +254,13 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     tracker ! TrackConnection(ac)
     tracker ! TrackConnection(hc)
-    //    testProbe.expectMsg(t, Unresolved(ac))
-    //    testProbe.expectMsg(t, Unresolved(hc))
 
-    // Assure no messages coming for no tracking
-    //    testProbe.expectNoMsg(5.seconds)
-
-    val f1 = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
+    val reg1 = Await.result(LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix), 5.seconds)
 
     val r1 = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
-    val f2 = LocationService.registerHttpConnection(componentId, testPort)
-    Await.ready(f2, 3.seconds) // XXX
+    val reg2 = Await.result(LocationService.registerHttpConnection(componentId, testPort), 5.seconds)
     val r2 = testProbe.expectMsgClass(t, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
 
@@ -295,15 +271,11 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     // Re-add it again
     tracker ! TrackConnection(hc)
-    //    testProbe.expectMsg(t, Unresolved(hc))
     val r4 = testProbe.expectMsgClass(t, classOf[ResolvedHttpLocation])
     assert(r4.connection == hc)
-    // Assure no messages coming for no tracking
-    //    testProbe.expectNoMsg(5.seconds)
 
-    val f = Future.sequence(List(f1, f2))
-    val resultList = Await.result(f, 1.second)
-    resultList.foreach(_.unregister())
+    reg1.unregister()
+    reg2.unregister()
     system.stop(tracker)
   }
 }

@@ -2,7 +2,7 @@ package csw.services.alarms
 
 import java.nio.file.Paths
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.alarms.AscfValidation.Problem
 import org.scalatest.FunSuite
 

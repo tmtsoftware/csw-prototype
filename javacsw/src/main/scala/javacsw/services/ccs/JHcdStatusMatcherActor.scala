@@ -29,8 +29,8 @@ object JHcdStatusMatcherActor {
    * @param replyTo the actor to reply to
    */
   def props(demands: java.util.List[DemandState], hcds: java.util.Set[ActorRef], replyTo: ActorRef): Props = {
-    import scala.collection.JavaConversions._
-    Props(classOf[HcdStatusMatcherActor], demands.toList, hcds.toSet, replyTo, RunId(), Timeout(60.seconds),
+    import scala.collection.JavaConverters._
+    Props(classOf[HcdStatusMatcherActor], demands.asScala.toList, hcds.asScala.toSet, replyTo, RunId(), Timeout(60.seconds),
       StateVariable.defaultMatcher _)
   }
 
@@ -48,8 +48,8 @@ object JHcdStatusMatcherActor {
             timeout: Timeout,
             // XXX Might need to be scala.Boolean!
             matcher: java.util.function.BiFunction[DemandState, CurrentState, java.lang.Boolean]): Props = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     import scala.compat.java8.FunctionConverters._
-    Props(classOf[HcdStatusMatcherActor], demands.toList, hcds.toSet, replyTo, runId, timeout, matcher.asScala)
+    Props(classOf[HcdStatusMatcherActor], demands.asScala.toList, hcds.asScala.toSet, replyTo, runId, timeout, matcher.asScala)
   }
 }

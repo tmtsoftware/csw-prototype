@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.http.scaladsl.Http
 import akka.util.ByteString
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import net.codejava.security.HashGeneratorUtils
 import org.slf4j.LoggerFactory
 

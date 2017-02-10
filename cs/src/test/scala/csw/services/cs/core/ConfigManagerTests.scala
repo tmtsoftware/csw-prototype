@@ -1,7 +1,7 @@
 package csw.services.cs.core
 
 import akka.actor.ActorSystem
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.akka.{TestRepo, ConfigServiceSettings}
 import org.scalatest.FunSuite

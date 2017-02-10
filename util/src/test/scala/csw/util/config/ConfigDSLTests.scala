@@ -1,14 +1,14 @@
 package csw.util.config
 
 import csw.util.config.UnitsOfMeasure.{degrees, NoUnits}
-import org.scalatest.{FunSpec, ShouldMatchers}
+import org.scalatest.{FunSpec, Matchers}
 import csw.util.config.ConfigDSL._
 import csw.util.config.Configurations.SetupConfig
 
 /**
  * Tests the config DSL
  */
-class ConfigDSLTests extends FunSpec with ShouldMatchers {
+class ConfigDSLTests extends FunSpec with Matchers {
   private val s1: String = "encoder"
   private val s2: String = "filter"
   private val s3: String = "detectorTemp"

@@ -2,7 +2,7 @@ package csw.services.events
 
 import csw.util.config.Events.StatusEvent
 import org.scalatest.FunSuite
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.util.config.{DoubleKey, StringKey}
 
 object EventTests {

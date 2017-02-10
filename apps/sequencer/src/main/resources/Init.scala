@@ -5,7 +5,6 @@ import akka.util.Timeout
 import csw.services.loc.LocationService
 
 import scala.collection.JavaConverters._
-import scala.collection.JavaConversions._
 import java.io.StringReader
 
 import csw.services.ccs._

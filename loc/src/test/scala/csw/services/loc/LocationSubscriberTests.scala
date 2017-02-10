@@ -2,7 +2,7 @@ package csw.services.loc
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService._
 import org.scalatest.{BeforeAndAfterAll, _}
@@ -59,7 +59,7 @@ object LocationSubscriberTests {
 }
 
 class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
   import LocationSubscriberTests._
 
@@ -252,7 +252,7 @@ class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) wi
       fakeAssembly.send(ts2, LocationService.TrackConnection(c1))
 
       // Now wait a bit and see if the client has received updates
-      expectNoMsg(500.millis)
+      expectNoMsg(1000.millis)
 
       tsc1 ! GetResults
       // Get the results

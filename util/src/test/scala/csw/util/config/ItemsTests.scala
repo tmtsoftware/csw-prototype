@@ -2,12 +2,12 @@ package csw.util.config
 
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.{degrees, meters, seconds}
-import org.scalatest.{FunSpec, ShouldMatchers}
+import org.scalatest.{FunSpec, Matchers}
 
 /**
  * TMT Source Code: 7/7/16.
  */
-class ItemsTests extends FunSpec with ShouldMatchers {
+class ItemsTests extends FunSpec with Matchers {
 
   private val s1: String = "encoder"
   private val s2: String = "filter"

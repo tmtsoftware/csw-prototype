@@ -3,7 +3,7 @@ package csw.services.events
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.LocationService
 import csw.util.config.Events.SystemEvent
 import csw.util.config._

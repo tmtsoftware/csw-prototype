@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.{Actor, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.ConnectionType.{AkkaType, HttpType}
 import csw.services.loc.{ComponentId, Connection, LocationService}

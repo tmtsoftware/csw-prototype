@@ -5,7 +5,7 @@ import java.net.URI
 import java.util.UUID
 
 import akka.actor.ActorRefFactory
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
 import csw.services.cs.core._
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager

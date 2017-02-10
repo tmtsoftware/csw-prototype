@@ -12,6 +12,7 @@ import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Failure
 
 object TelemetryService {
   /**
@@ -307,8 +308,9 @@ object TelemetryServiceImpl {
       callback.foreach { f =>
         Future {
           f(event)
-        }.onFailure {
-          case ex => log.error("StatusEvent callback failed: ", ex)
+        }.onComplete {
+          case Failure(ex) => log.error("StatusEvent callback failed: ", ex)
+          case _           =>
         }
       }
     }
