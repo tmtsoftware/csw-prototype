@@ -108,7 +108,7 @@ case "$1" in
                 echo "Redis pid file $redisPidFile exists, process is already running or crashed?"
             else
                random_unused_port
-               $CSW_INSTALL/bin/tracklocation --name "$redisServices" --port $RANDOM_PORT --command "$redisServer --protected-mode no --port $RANDOM_PORT" > $redisLogFile 2>&1 &
+               $CSW_INSTALL/bin/tracklocation --name "$redisServices" --port $RANDOM_PORT --command "$redisServer --protected-mode no --notify-keyspace-events KEA --port $RANDOM_PORT" > $redisLogFile 2>&1 &
                 echo $! > $redisPidFile
                 echo $RANDOM_PORT > $redisPortFile
 				# Load the default alarms in to the Alarm Service Redis instance

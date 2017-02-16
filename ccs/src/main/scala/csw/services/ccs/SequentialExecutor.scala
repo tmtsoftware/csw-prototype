@@ -44,14 +44,14 @@ class SequentialExecutor(commandHandler: ActorRef, sca: SetupConfigArg, commandO
       }
 
     case cs @ NoLongerValid(_) =>
-      log.info(s"Validation Issue: $cs")
+      log.warning(s"Validation Issue: $cs")
       // Save record of sequential successes
       val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
       context.stop(self)
 
     case cs: Error =>
-      log.info(s"Received error: ${cs.message}")
+      log.warning(s"Received error: ${cs.message}")
       // Save record of sequential successes
       val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       // This returns the cumulative results to the original sender of the message to the sequenctial executor
@@ -59,7 +59,7 @@ class SequentialExecutor(commandHandler: ActorRef, sca: SetupConfigArg, commandO
       context.stop(self)
 
     case cs: Invalid =>
-      log.info(s"Received Invalid: ${cs.issue}")
+      log.warning(s"Received Invalid: ${cs.issue}")
       // Save record of sequential successes
       val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))

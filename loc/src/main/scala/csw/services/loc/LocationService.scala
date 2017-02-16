@@ -586,7 +586,7 @@ object LocationService {
             log.debug(s"Unresolving terminated actor: $c")
             if (actorRef == otherActorRef) removeService(c)
           case x => // should not happen
-            log.warning(s"Received Terminated message from unknown location: $x")
+            log.warning(s"Received Terminated message for unknown actor: $actorRef")
         }
 
       case x =>

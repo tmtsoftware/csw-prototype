@@ -103,19 +103,6 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   private var channelsSubscribed = Set[String]()
   private var patternsSubscribed = Set[String]()
 
-  // Unsubscribe on actor stop
-  override def postStop(): Unit = {
-    super.postStop()
-    if (channelsSubscribed.nonEmpty) {
-      write(UNSUBSCRIBE(channelsSubscribed.toSeq: _*).toByteString)
-      log.debug(s"Unsubscribed to channels ${channelsSubscribed.mkString(", ")}")
-    }
-    if (patternsSubscribed.nonEmpty) {
-      write(PUNSUBSCRIBE(patternsSubscribed.toSeq: _*).toByteString)
-      log.debug(s"Unsubscribed to patterns ${patternsSubscribed.mkString(", ")}")
-    }
-  }
-
   override def writing: Receive = {
     case message: SubscribeMessage =>
       write(message.toByteString)

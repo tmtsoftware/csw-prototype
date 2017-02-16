@@ -535,7 +535,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   }
 
   // Used to log messages for state changes
-  private def logState(thisState: LifecycleState, nextState: LifecycleState) = log.debug(s"In $thisState going to $nextState")
+  private def logState(thisState: LifecycleState, nextState: LifecycleState) = log.debug(s"$name: In $thisState going to $nextState")
 
   // The following is listener support for the container or other interested component
   private var listeners = Set[ActorRef]()

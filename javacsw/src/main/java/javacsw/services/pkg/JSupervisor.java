@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
 import csw.services.pkg.Supervisor.*;
+import csw.services.pkg.SupervisorExternal.*;
 
 /**
  * Java API for some of the static defs in the Supervisor Scala class
@@ -29,10 +30,10 @@ public class JSupervisor {
   public static final LifecycleState LifecycleWaitingForInitialized =  LifecycleWaitingForInitialized$.MODULE$;
 
   /**
-   * State of the Supervisor when Initialized after receiving the [[csw.services.pkg.Supervisor.Initialized]]
-   * message (first) from the component
+   * State of the Supervisor/component after the component has indicated it could not initialize successfully.
+   * Component receives the [[LifecycleFailureInfo]] message and can take a failure action.
    */
- // public static final LifecycleState LifecycleInitialized =  LifecycleInitialized$.MODULE$;
+  public static final LifecycleState LifecycleInitializeFailure =  LifecycleInitializeFailure$.MODULE$;
 
   /**
    * State of the Supervisor after receiving the [[csw.services.pkg.Supervisor.Started]]
@@ -74,6 +75,11 @@ public class JSupervisor {
    */
   public static final LifecycleState LifecycleShutdownFailure =  LifecycleShutdownFailure$.MODULE$;
 
+  /**
+   * Diagnostic message to shutdown and then exit supervisor/component
+   */
+  public static final FromComponentLifecycleMessage HaltComponent = HaltComponent$.MODULE$;
+
 
   // --- Messages sent to components to notify of lifecycle changes ---
 
@@ -89,45 +95,36 @@ public class JSupervisor {
   // Supervisor reports that compoentn is Running but is Offline
   public static final ToComponentLifecycleMessage RunningOffline = RunningOffline$.MODULE$;
 
-//  // Report to component that a lifecycle failure has occurred for logging, etc.
-//  static class LifecycleFailureInfo(state: LifecycleState, reason: String) extends ToComponentLifecycleMessage
-
-
 
   // --- Messages from component indicating events ---
 
   // Component indicates it has Initialized successfully
   public static final FromComponentLifecycleMessage Initialized =  Initialized$.MODULE$;
 
-//  /**
-//   * Component indicates it failed to initialize with the given reason
-//   *
-//   * @param reason the reason for failing to initialize as a String
-//   */
-//  case class InitializeFailure(reason: String) extends FromComponentLifecycleMessage
-
-//  /**
-//   * Component indicates it failed to startup with the given reason
-//   *
-//   * @param reason reason for failing to startup as a String
-//   */
-//  case class StartupFailure(reason: String) extends FromComponentLifecycleMessage
-
   /**
    * Component indicates it has completed shutting down successfully
    */
   public static final FromComponentLifecycleMessage ShutdownComplete = ShutdownComplete$.MODULE$;
 
-//  /**
-//   * Component indicates it has failed to shutdown properly with the given reason
-//   *
-//   * @param reason reason for failing to shutdown as a String
-//   */
-//  case class ShutdownFailure(reason: String) extends FromComponentLifecycleMessage
+  // -- Messages sent to a component from outside --
+
+  /**
+   * External request to restart component initialization -- only possible in LifecycleRunning and LifecycleRunningOffline
+   */
+  public static final SupervisorExternalMessage ExComponentRestart = ExComponentRestart$.MODULE$;
 
   /**
    * Diagnostic message to shutdown and then exit supervisor/component
    */
-  public static final FromComponentLifecycleMessage HaltComponent = HaltComponent$.MODULE$;
+  public static final SupervisorExternalMessage ExComponentShutdown = ExComponentShutdown$.MODULE$;
 
+  /**
+   * External request to put component onlne -- only possible in LifecycleRunningOffline
+   */
+  public static final SupervisorExternalMessage ExComponentOnline = ExComponentOnline$.MODULE$;
+
+  /**
+   * External request to put component offline -- only possible in LifecycleRunning
+   */
+  public static final SupervisorExternalMessage ExComponentOffline = ExComponentOffline$.MODULE$;
 }
