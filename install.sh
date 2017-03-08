@@ -34,7 +34,7 @@ chmod +x $dir/bin/*.sh
 
 rm -rf $dir/doc/*
 cp -r target/javaunidoc/ $dir/doc/java
-cp -r target/scala-2.11/unidoc/ $dir/doc/scala
+cp -r target/scala-2.12/unidoc/ $dir/doc/scala
 
 rm -f $dir/bin/*.log.* $dir/bin/*.bat
 
