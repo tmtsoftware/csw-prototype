@@ -451,8 +451,8 @@ object LocationService {
       Connection(event.getName).map { connection =>
         if (!connections.contains(connection)) {
           log.debug(s"serviceResolved: Resolved service not known yet (adding): $connection")
-          val unc = UnTrackedLocation(connection)
-          connections += connection -> unc
+          //          val unc = UnTrackedLocation(connection)
+          //          connections += connection -> unc
           resolveService(connection, event.getInfo)
         }
       }
