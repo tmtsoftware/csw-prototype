@@ -132,7 +132,7 @@ object LocationSubscriberActor {
   }
 
   def untrackConnection(connection: Connection, trackerSubscriberActor: ActorRef): Unit = {
-    trackerSubscriberActor ! TrackConnection(connection)
+    trackerSubscriberActor ! UntrackConnection(connection)
   }
 
   def trackConnections(connections: Set[Connection], trackerSubscriberActor: ActorRef) = {
