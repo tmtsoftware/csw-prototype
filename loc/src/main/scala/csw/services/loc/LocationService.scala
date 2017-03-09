@@ -450,9 +450,11 @@ object LocationService {
       // Complete the promise so that the related future completes, in case the WaitToTrack() method is waiting for it
       Connection(event.getName).map { connection =>
         if (!connections.contains(connection)) {
-          log.error(s"Resolved service not known yet: $connection")
-          val unc = UnTrackedLocation(connection)
-          connections += connection -> unc
+          log.debug(s"serviceResolved: Resolved service not known yet (adding): $connection")
+          resolveService(connection, event.getInfo)
+
+          //          val unc = UnTrackedLocation(connection)
+          //          connections += connection -> unc
         }
       }
 
