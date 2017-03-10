@@ -69,8 +69,7 @@ test -d $cswDataDir || mkdir -p $cswDataDir
 csPidFile=$cswDataDir/cs.pid
 csLogFile=$cswDataDir/cs.log
 # Config Service options
-csOptions="--init"
-#--nohttp --noannex
+csOptions="--init --nohttp --noannex"
 
 # Redis pid and log files
 redisPidFile=$cswDataDir/redis.pid
