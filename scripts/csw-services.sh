@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Starts serviced required by CSW and registers them with the location service.
+# Starts services required by CSW and registers them with the location service.
 # This script uses the csw trackLocation app to start Redis and register it with the
 # Location Service under different names (see below).
 #
 # Usage is:
 #
-#  csw-services.sh start     - to start redis and register it for the event, alarm and telemetry services
-#  csw-services.sh stop      - to stop redis and unregister from the location service
+#  csw-services.sh start     - to start redis and register  the config, event, alarm and telemetry services
+#  csw-services.sh stop      - to stop redis and unregister the services from the location service
 #
 # The services are registered as:
 #   "Event Service"
