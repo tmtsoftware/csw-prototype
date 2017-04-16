@@ -3,7 +3,7 @@ package javacsw.services.alarms.tests;
 import akka.actor.ActorSystem;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AscfValidation;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests the Java API to the Alarm Service
  */
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalGetWithoutIsPresent"})
+@SuppressWarnings("ALL")
 public class JBlockingAlarmServiceTests {
   private static ActorSystem system;
   private static LoggingAdapter logger;
@@ -62,14 +62,6 @@ public class JBlockingAlarmServiceTests {
     system = ActorSystem.create();
     System.setProperty("csw.services.alarms.refreshSecs", String.valueOf(refreshSecs));
 
-//    String asName = "Blocking Alarm Service Test";
-//
-//    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis on a random port and register it with the location service.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Blocking Alarm Service Test" --command "redis-server --port %port" --no-exit
-//    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
-
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
     alarmService = IBlockingAlarmService.getAlarmService(IBlockingAlarmService.defaultName, system, timeout);
@@ -77,9 +69,7 @@ public class JBlockingAlarmServiceTests {
 
   @AfterClass
   public static void teardown() {
-//    IBlockingAlarmAdmin admin = new JBlockingAlarmAdmin(alarmService, timeout, system);
-//    admin.shutdown();
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 

@@ -1,7 +1,7 @@
 package javacsw.services.events.tests;
 
 import akka.actor.ActorSystem;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import csw.util.config.DoubleKey;
@@ -9,8 +9,6 @@ import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.ITelemetryService;
-import javacsw.services.events.ITelemetryServiceAdmin;
-import javacsw.services.events.JTelemetryServiceAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -53,7 +51,7 @@ public class JTelemetryServiceTest {
 
   @AfterClass
   public static void teardown() {
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 

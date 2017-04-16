@@ -2,9 +2,9 @@ package javacsw.services.ts.tests;
 
 import akka.actor.*;
 import akka.japi.Creator;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
+import csw.services.ts.AbstractTimeServiceScheduler;
 import javacsw.services.ts.JTimeService;
-import javacsw.services.ts.JTimeServiceScheduler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class JTimeServiceTest {
 
   @AfterClass
   public static void teardown() {
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 
@@ -54,16 +54,12 @@ public class JTimeServiceTest {
 
   @Test
   public void callSchedulerOnce() throws Exception {
-    new JavaTestKit(system) {
+    new TestKit(system) {
       {
         ActorRef timerTest = system.actorOf(JTestScheduler.props("tester", getRef()));
         timerTest.tell("once", getRef());
 
-        new Within(JavaTestKit.duration("10 seconds")) {
-          protected void run() {
-            expectMsgEquals("done");
-          }
-        };
+        within(duration("10 seconds"), () -> expectMsgEquals("done"));
       }
     };
   }
@@ -71,27 +67,26 @@ public class JTimeServiceTest {
   @Test
   public void with5CountsIn5Seconds() throws Exception {
     LoggingAdapter logger = Logging.getLogger(system, this);
-    new JavaTestKit(system) {
+    new TestKit(system) {
       {
         ActorRef timerTest = system.actorOf(JTestScheduler.props("tester", getRef()));
         timerTest.tell("five", getRef());
 
-        new Within(JavaTestKit.duration("10 seconds")) {
-          protected void run() {
+        within(duration("10 seconds"), () -> {
             Cancellable cancellable = expectMsgClass(Cancellable.class);
             logger.info("Received cancellable: " + cancellable);
             int count = expectMsgClass(Integer.class);
             logger.info("Executed " + count + " scheduled messages");
             assertTrue(count == 5);
             cancellable.cancel();
-          }
-        };
+            return null;
+        });
       }
     };
   }
 
   // Actor used in above test
-  private static class JTestScheduler extends JTimeServiceScheduler {
+  private static class JTestScheduler extends AbstractTimeServiceScheduler {
     private final String name;
     private final ActorRef caller;
     private int count = 0;
@@ -112,27 +107,36 @@ public class JTimeServiceTest {
       });
     }
 
-    public void onReceive(Object message) throws Exception {
-      if (message instanceof String) {
-        if (message.equals("once")) {
-          log.info(name + ": Received once start");
-          scheduleOnce(JTimeService.localTimeNow().plusSeconds(5), context().self(), "once-done");
-        } else if (message.equals("five")) {
-          log.info(name + ": Received multi start");
-          Cancellable c = schedule(JTimeService.localTimeNow().plusSeconds(1), java.time.Duration.ofSeconds(1), context().self(), "count");
-          caller.tell(c, self()); //Return the cancellable
+    @Override
+    public Receive createReceive() {
+      return receiveBuilder()
+          .match(String.class, message -> {
+            switch (message) {
+              case "once":
+                log.info(name + ": Received once start");
+                scheduleOnce(JTimeService.localTimeNow().plusSeconds(5), context().self(), "once-done");
+                break;
+              case "five":
+                log.info(name + ": Received multi start");
+                Cancellable c = schedule(JTimeService.localTimeNow().plusSeconds(1), Duration.ofSeconds(1), context().self(), "count");
+                caller.tell(c, self()); //Return the cancellable
 
-        } else if (message.equals("count")) {
-          count = count + 1;
-          log.info(name + ": Count: " + count);
-          if (count >= 5) caller.tell(count, self());
 
-        } else if (message.equals("once-done")) {
-          log.info(name + ": Received Done");
-          caller.tell("done", self());
-        }
-      } else
-        unhandled(message);
+                break;
+              case "count":
+                count = count + 1;
+                log.info(name + ": Count: " + count);
+                if (count >= 5) caller.tell(count, self());
+
+                break;
+              case "once-done":
+                log.info(name + ": Received Done");
+                caller.tell("done", self());
+                break;
+            }
+          })
+          .build();
+
     }
 
     @Override

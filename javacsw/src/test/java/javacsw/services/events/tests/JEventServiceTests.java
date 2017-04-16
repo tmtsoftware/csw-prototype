@@ -1,7 +1,7 @@
 package javacsw.services.events.tests;
 
 import akka.actor.ActorSystem;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.events.EventService.*;
 
@@ -12,8 +12,6 @@ import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IEventService;
-import javacsw.services.events.IEventServiceAdmin;
-import javacsw.services.events.JEventServiceAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,15 +48,15 @@ public class JEventServiceTests {
 
   @AfterClass
   public static void teardown() {
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 
   // Used to test that event handler was called
-  static Optional<EventServiceEvent> eventReceived = Optional.empty();
+  private static Optional<EventServiceEvent> eventReceived = Optional.empty();
 
   // Called when an event is received
-  static IEventService.EventHandler eventHandler = ev -> eventReceived = Optional.of(ev);
+  private static IEventService.EventHandler eventHandler = ev -> eventReceived = Optional.of(ev);
 
   @Test
   public void TestSubscribeMethod() throws Exception {

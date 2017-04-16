@@ -7,8 +7,7 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import csw.util.config.DoubleKey;
@@ -19,7 +18,6 @@ import javacsw.services.events.IBlockingTelemetryService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
@@ -56,7 +54,7 @@ public class JBlockingTelemetryServiceTest {
 
   @AfterClass
   public static void teardown() {
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 
@@ -64,13 +62,13 @@ public class JBlockingTelemetryServiceTest {
   public void testSetandGet() throws Exception {
     String prefix1 = "tcs.telem.test1a";
     StatusEvent event1 = StatusEvent(prefix1)
-      .add(jset(infoValue, 1))
-      .add(jset(infoStr, "info 1"));
+        .add(jset(infoValue, 1))
+        .add(jset(infoStr, "info 1"));
 
     String prefix2 = "tcs.telem.test2a";
     StatusEvent event2 = StatusEvent(prefix2)
-      .add(jset(infoValue, 2))
-      .add(jset(infoStr, "info 2"));
+        .add(jset(infoValue, 2))
+        .add(jset(infoStr, "info 2"));
 
     bts.publish(event1);
     StatusEvent val1 = bts.get(prefix1).get();
@@ -94,7 +92,7 @@ public class JBlockingTelemetryServiceTest {
   public void TestSetGetAndGetHistory() throws Exception {
     String prefix = "tcs.telem.testPrefix.a";
     StatusEvent event = StatusEvent(prefix)
-      .add(jset(exposureTime, 2.0));
+        .add(jset(exposureTime, 2.0));
 
     int n = 3;
     bts.publish(event.add(jset(exposureTime, 3.0)), n);
@@ -125,14 +123,14 @@ public class JBlockingTelemetryServiceTest {
     final String prefix2 = "tcs.telem.test2a";
 
     final StatusEvent event1 = StatusEvent(prefix1)
-      .add(jset(infoValue, 1))
-      .add(jset(infoStr, "info 1"));
+        .add(jset(infoValue, 1))
+        .add(jset(infoStr, "info 1"));
 
     final StatusEvent event2 = StatusEvent(prefix2)
-      .add(jset(infoValue, 1))
-      .add(jset(infoStr, "info 2"));
+        .add(jset(infoValue, 1))
+        .add(jset(infoStr, "info 2"));
 
-    new JavaTestKit(system) {
+    new TestKit(system) {
       {
         LoggingAdapter log = Logging.getLogger(system, this);
         // See below for actor class
@@ -153,15 +151,14 @@ public class JBlockingTelemetryServiceTest {
         Thread.sleep(1000);
 
         mySubscriber.tell(MySubscriber.GetResults.instance, getRef());
-        new Within(Duration.create(5, TimeUnit.SECONDS)) {
-          protected void run() {
-            MySubscriber.Results result = expectMsgClass(MySubscriber.Results.class);
-            assertTrue(result.getCount1() == 2);
-            assertTrue(result.getCount2() == 3);
-            system.stop(mySubscriber);
-            log.debug("Java telemetry subscriber test passed!");
-          }
-        };
+        within(duration("5 seconds"), () -> {
+          MySubscriber.Results result = expectMsgClass(MySubscriber.Results.class);
+          assertTrue(result.getCount1() == 2);
+          assertTrue(result.getCount2() == 3);
+          system.stop(mySubscriber);
+          log.debug("Java telemetry subscriber test passed!");
+          return null;
+        });
       }
     };
   }
@@ -169,28 +166,28 @@ public class JBlockingTelemetryServiceTest {
   // Subscriber class used to test the Java API for subscribing to telemetry: JTelemetrySubscriber
   static class MySubscriber extends AbstractActor {
     // Message to get the results
-    public static class GetResults {
-      public static final GetResults instance = new GetResults();
+    static class GetResults {
+      static final GetResults instance = new GetResults();
 
       private GetResults() {
       }
     }
 
     // Message holding the results
-    public static class Results {
+    static class Results {
       int count1;
       int count2;
 
-      public Results(int count1, int count2) {
+      Results(int count1, int count2) {
         this.count1 = count1;
         this.count2 = count2;
       }
 
-      public int getCount1() {
+      int getCount1() {
         return count1;
       }
 
-      public int getCount2() {
+      int getCount2() {
         return count2;
       }
     }
@@ -213,16 +210,20 @@ public class JBlockingTelemetryServiceTest {
       });
     }
 
-    public MySubscriber(String prefix1, String prefix2) {
+    MySubscriber(String prefix1, String prefix2) {
       this.prefix1 = prefix1;
       this.prefix2 = prefix2;
-
-      receive(ReceiveBuilder
-        .match(StatusEvent.class, this::handleStatusEvent)
-        .match(GetResults.class, this::getResults)
-        .matchAny(t -> log.warning("Unexpected message: " + t)
-        ).build());
     }
+
+    @Override
+    public Receive createReceive() {
+      return receiveBuilder()
+          .match(StatusEvent.class, this::handleStatusEvent)
+          .match(GetResults.class, this::getResults)
+          .matchAny(t -> log.warning("Unexpected message: " + t))
+          .build();
+    }
+
 
     private void handleStatusEvent(StatusEvent event) {
       if (event.prefix().equals(prefix1)) {

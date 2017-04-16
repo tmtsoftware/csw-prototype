@@ -1,7 +1,7 @@
 package javacsw.services.ccs.tests;
 
 import akka.actor.*;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import csw.util.config.StringKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -24,7 +24,7 @@ public class JHcdControllerTests {
 
     @AfterClass
     public static void teardown() {
-        JavaTestKit.shutdownActorSystem(system);
+        TestKit.shutdownActorSystem(system);
         system = null;
     }
 /*

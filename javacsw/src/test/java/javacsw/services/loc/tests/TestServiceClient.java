@@ -5,7 +5,6 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import csw.services.loc.LocationService;
 import javacsw.services.loc.AbstractLocationTrackerClientActor;
 
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 public class TestServiceClient extends AbstractLocationTrackerClientActor {
 
     // Used to create the ith TestServiceClient actor
-    static Props props(int numServices) {
+    private static Props props(int numServices) {
         return Props.create(new Creator<TestServiceClient>() {
             private static final long serialVersionUID = 1L;
 
@@ -32,20 +31,23 @@ public class TestServiceClient extends AbstractLocationTrackerClientActor {
         });
     }
 
-    LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 
     // Constructor: tracks the given number of akka and http connections
-    public TestServiceClient(int numServices) {
+    private TestServiceClient(int numServices) {
         for(int i = 0; i < numServices; i++) {
             trackConnection(TestAkkaService.connection(i+1));
             trackConnection(TestHttpService.connection(i+1));
         }
+    }
 
+    @Override
+    public Receive createReceive() {
         // Actor messages are handled by the parent class (in trackerClientReceive method)
-        receive(trackerClientReceive().orElse(ReceiveBuilder.
-                matchAny(t -> log.warning("Unknown message received: " + t)).
-                build()));
+        return receiveBuilder()
+            .matchAny(t -> log.warning("Unknown message received: " + t))
+            .build();
     }
 
     // Called when all connections are resolved

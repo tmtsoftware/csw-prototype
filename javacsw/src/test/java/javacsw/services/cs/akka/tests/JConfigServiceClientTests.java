@@ -2,7 +2,7 @@ package javacsw.services.cs.akka.tests;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import csw.services.cs.akka.ConfigServiceActor;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests the IConfigManager class
  */
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "WeakerAccess"})
 public class JConfigServiceClientTests {
 
     private static ActorSystem system;
@@ -36,7 +36,7 @@ public class JConfigServiceClientTests {
 
     @AfterClass
     public static void teardown() {
-        JavaTestKit.shutdownActorSystem(system);
+        TestKit.shutdownActorSystem(system);
         system = null;
     }
 

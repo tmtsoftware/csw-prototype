@@ -6,7 +6,6 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
@@ -25,17 +24,17 @@ import javacsw.services.loc.JLocationService;
  */
 public class TestAkkaService extends AbstractActor {
     // Component id for the ith service
-    static ComponentId componentId(int i) {
+    private static ComponentId componentId(int i) {
         return JComponentId.componentId("TestAkkaService-" + i, JComponentType.Assembly);
     }
 
     // Connection for the ith service
-    public static Connection connection(int i) {
+    static Connection connection(int i) {
         return JConnection.akkaConnection(componentId(i));
     }
 
     // Used to create the ith TestAkkaService actor
-    static Props props(int i) {
+    private static Props props(int i) {
         return Props.create(new Creator<TestAkkaService>() {
             private static final long serialVersionUID = 1L;
 
@@ -46,16 +45,19 @@ public class TestAkkaService extends AbstractActor {
         });
     }
 
-    LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 
     // Constructor: registers self with the location service
-    public TestAkkaService(int i) {
+    private TestAkkaService(int i) {
         JLocationService.registerAkkaConnection(TestAkkaService.componentId(i), self(), "test.akka.prefix", getContext().system());
+    }
 
-        receive(ReceiveBuilder.
-                matchAny(t -> log.warning("Unknown message received: " + t)).
-                build());
+    @Override
+    public Receive createReceive() {
+        return receiveBuilder()
+            .matchAny(t -> log.warning("Unknown message received: " + t))
+            .build();
     }
 
     // main: Starts and registers the given number of services (default: 1)

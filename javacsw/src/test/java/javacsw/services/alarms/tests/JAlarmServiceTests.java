@@ -3,7 +3,7 @@ package javacsw.services.alarms.tests;
 import akka.actor.ActorSystem;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AscfValidation;
@@ -57,24 +57,14 @@ public class JAlarmServiceTests {
     LocationService.initInterface();
     system = ActorSystem.create();
     System.setProperty("csw.services.alarms.refreshSecs", String.valueOf(refreshSecs));
-//
-//    String asName = "Alarm Service Test";
-//
-//    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis on a random port and register it with the location service.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port" --no-exit
-//    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
-//
+
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
     alarmService = IAlarmService.getAlarmService(system, timeout).get();
   }
 
   @AfterClass
   public static void teardown() {
-//    IAlarmServiceAdmin admin = new JAlarmServiceAdmin(alarmService, system);
-//    admin.shutdown();
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 

@@ -7,7 +7,6 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
@@ -26,17 +25,17 @@ import javacsw.services.loc.JLocationService;
  */
 public class TestHttpService extends AbstractActor {
     // Component id for the ith service
-    static ComponentId componentId(int i) {
+    private static ComponentId componentId(int i) {
         return JComponentId.componentId("TestHttpService-" + i, JComponentType.Assembly);
     }
 
     // Connection for the ith service
-    public static Connection connection(int i) {
+    static Connection connection(int i) {
         return JConnection.httpConnection(componentId(i));
     }
 
     // Used to create the ith TestHttpService actor
-    static Props props(int i) {
+    private static Props props(int i) {
         return Props.create(new Creator<TestHttpService>() {
             private static final long serialVersionUID = 1L;
 
@@ -47,17 +46,20 @@ public class TestHttpService extends AbstractActor {
         });
     }
 
-    LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 
     // Constructor: registers self with the location service
-    public TestHttpService(int i) {
+    private TestHttpService(int i) {
         int port = 9000 + i;
         JLocationService.registerHttpConnection(TestHttpService.componentId(i), port, "", getContext().system());
+    }
 
-        receive(ReceiveBuilder.
-                matchAny(t -> log.warning("Unknown message received: " + t)).
-                build());
+    @Override
+    public Receive createReceive() {
+        return receiveBuilder()
+            .matchAny(t -> log.warning("Unknown message received: " + t))
+            .build();
     }
 
     // main: Starts and registers the given number of services (default: 1)

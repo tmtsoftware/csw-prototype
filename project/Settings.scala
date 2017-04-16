@@ -17,7 +17,7 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 //noinspection TypeAnnotation
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
-  val Version = "0.4-SNAPSHOT"
+  val Version = "0.5-SNAPSHOT"
 
   val buildSettings = Seq(
     organization := "org.tmt",
@@ -26,6 +26,8 @@ object Settings {
     version := Version,
     scalaVersion := Dependencies.scalaVersion,
     crossPaths := true,
+    isSnapshot := true,
+    isSnapshot in ThisBuild := true,
 
     // Note: "parallelExecution in Test := false" doesn't seem to prevent parallel execution when all tests are run,
     // which can be a problem in some cases. Besides the fact that all the test output is mixed up,
