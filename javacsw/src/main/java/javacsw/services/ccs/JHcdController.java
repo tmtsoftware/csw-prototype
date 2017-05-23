@@ -52,11 +52,18 @@ abstract public class JHcdController extends AbstractHcdController {
 
   /**
    * This should be used by the implementer actor's receive method.
-   * For example: def receive: Receive = controllerReceive orElse ...
+   * For example: return jControllerReceive().orElse(...)
    */
-  @Override
-  public /*protected*/ PartialFunction<Object, BoxedUnit> controllerReceive() {
-    return super.controllerReceive();
+  protected Receive jControllerReceive() {
+    return new Receive(super.controllerReceive());
+  }
+
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: return jPublisherReceive().orElse(...)
+   */
+  protected Receive jPublisherReceive() {
+    return new Receive(super.publisherReceive());
   }
 
   @Override

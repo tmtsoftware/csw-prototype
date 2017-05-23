@@ -5,10 +5,10 @@ import sbt._
 //noinspection TypeAnnotation
 object Dependencies {
 
-  val scalaVersion = "2.12.1"
+  val scalaVersion = "2.12.2"
 
-  val akkaVersion = "2.5.0"
-  val akkaHttpVersion = "10.0.5"
+  val akkaVersion = "2.5.1"
+  val akkaHttpVersion = "10.0.6"
 
   val hornetqVersion = "2.4.7.Final"
 

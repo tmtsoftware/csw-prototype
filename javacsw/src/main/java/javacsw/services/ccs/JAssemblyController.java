@@ -27,4 +27,12 @@ public abstract class JAssemblyController extends AbstractAssemblyController {
   public JAssemblyController(AssemblyInfo info) {
     super(info);
   }
+
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: return jControllerReceive().orElse(...)
+   */
+  protected Receive jControllerReceive() {
+    return new Receive(super.controllerReceive());
+  }
 }
