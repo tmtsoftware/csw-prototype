@@ -348,29 +348,50 @@ object Configurations3 {
   }
 
   /**
+    * An itemset for setting observation parameters
+    *
+    * @param itemsetKey identifies the target subsystem
+    * @param items     an optional initial set of items (keys with values)
+    */
+  case class Result(info: ItemSetInfo, itemsetKey: ItemSetKey, items: ItemsData = Set.empty[Item[_]])
+    extends ItemSet[Result] with ItemSetKeyData {
+
+    override def create(data: ItemsData) = Result(info, itemsetKey, data)
+
+    // This is here for Java to construct with String
+    def this(info: ItemSetInfo, itemsetKey: String) = this(info, ItemSetKey.stringToItemSetKey(itemsetKey))
+
+    // The following overrides are needed for the Java API and javadocs
+    // (Using a Java interface caused various Java compiler errors)
+    override def add[I <: Item[_]](item: I): Result = super.add(item)
+
+    override def remove[S, I <: Item[S]](key: Key[S, I]): Result = super.remove(key)
+  }
+
+  /**
     * Filters
     */
-  object ConfigFilters {
-    // A filter type for various ConfigData
-    type ConfigFilter[A] = A => Boolean
+  object ItemSetFilters {
+    // A filter type for various ItemSet Data
+    type ItemSetFilter[A] = A => Boolean
 
-    def prefixes(configs: Seq[ItemSetKeyData]): Set[String] = configs.map(_.prefix).toSet
+    def prefixes(itemsets: Seq[ItemSetKeyData]): Set[String] = itemsets.map(_.prefix).toSet
 
-    def onlySetupConfigs(configs: Seq[SequenceItemSet]): Seq[Setup] = configs.collect { case ct: Setup => ct }
+    def onlySetups(itemsets: Seq[SequenceItemSet]): Seq[Setup] = itemsets.collect { case ct: Setup => ct }
 
-    def onlyObserveConfigs(configs: Seq[SequenceItemSet]): Seq[Observe] = configs.collect { case ct: Observe => ct }
+    def onlyObserves(itemsets: Seq[SequenceItemSet]): Seq[Observe] = itemsets.collect { case ct: Observe => ct }
 
-    def onlyWaitConfigs(configs: Seq[SequenceItemSet]): Seq[Wait] = configs.collect { case ct: Wait => ct }
+    def onlyWaits(itemsets: Seq[SequenceItemSet]): Seq[Wait] = itemsets.collect { case ct: Wait => ct }
 
-    val prefixStartsWithFilter: String => ConfigFilter[ItemSetKeyData] = query => sc => sc.prefix.startsWith(query)
-    val prefixContainsFilter: String => ConfigFilter[ItemSetKeyData] = query => sc => sc.prefix.contains(query)
-    val prefixIsSubsystem: Subsystem => ConfigFilter[ItemSetKeyData] = query => sc => sc.subsystem.equals(query)
+    val prefixStartsWithFilter: String => ItemSetFilter[ItemSetKeyData] = query => sc => sc.prefix.startsWith(query)
+    val prefixContainsFilter: String => ItemSetFilter[ItemSetKeyData] = query => sc => sc.prefix.contains(query)
+    val prefixIsSubsystem: Subsystem => ItemSetFilter[ItemSetKeyData] = query => sc => sc.subsystem.equals(query)
 
-    def prefixStartsWith(query: String, configs: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = configs.filter(prefixStartsWithFilter(query))
+    def prefixStartsWith(query: String, itemsets: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = itemsets.filter(prefixStartsWithFilter(query))
 
-    def prefixContains(query: String, configs: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = configs.filter(prefixContainsFilter(query))
+    def prefixContains(query: String, itemsets: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = itemsets.filter(prefixContainsFilter(query))
 
-    def prefixIsSubsystem(query: Subsystem, configs: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = configs.filter(prefixIsSubsystem(query))
+    def prefixIsSubsystem(query: Subsystem, itemsets: Seq[ItemSetKeyData]): Seq[ItemSetKeyData] = itemsets.filter(prefixIsSubsystem(query))
   }
 
 

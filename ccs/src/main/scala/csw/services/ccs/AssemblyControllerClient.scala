@@ -43,7 +43,7 @@ case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val
 
 // --
 
-private object AssemblyWrapper {
+private object AssemblyWrapper2 {
   def props(assembly: ActorRef): Props =
     Props(classOf[AssemblyWrapper], assembly)
 }
@@ -52,7 +52,7 @@ private object AssemblyWrapper {
  * A simple wrapper to get a single response from an assembly for a single submit
  * @param assembly the target assembly actor
  */
-private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorLogging {
+private case class AssemblyWrapper2(assembly: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case s: Submit =>
@@ -67,10 +67,8 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
     case cr: CommandResult =>
       cr.overall match {
         case Accepted =>
-          println(s"Received accepted")
           context.become(waitingForResult(replyTo))
         case NotAccepted | AllCompleted | Incomplete =>
-          println(s"Received not accepted")
           replyTo ! cr
       }
 
@@ -79,7 +77,6 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
 
   def waitingForResult(replyTo: ActorRef): Receive = {
     case r: CommandResult =>
-      println(s"Received final")
       replyTo ! r
       context.stop(self)
 
