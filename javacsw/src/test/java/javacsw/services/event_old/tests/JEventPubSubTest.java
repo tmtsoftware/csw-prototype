@@ -5,7 +5,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import csw.services.event_old.EventService;
 import csw.services.event_old.EventServiceSettings;
 import csw.util.config.DoubleKey;
@@ -91,7 +91,7 @@ public class JEventPubSubTest {
 
   @AfterClass
   public static void teardown() {
-    JavaTestKit.shutdownActorSystem(system);
+    TestKit.shutdownActorSystem(system);
     system = null;
   }
 
@@ -101,7 +101,7 @@ public class JEventPubSubTest {
    */
   @Test
   public void testEventService() throws Exception {
-    new JavaTestKit(system) {
+    new TestKit(system) {
       {
         LoggingAdapter log = Logging.getLogger(system, this);
         ActorRef subscriber = system.actorOf(Subscriber.props());
@@ -109,12 +109,11 @@ public class JEventPubSubTest {
         publisher.tell(Publish, getRef());
         log.debug("Waiting for Done message...");
 
-        new Within(JavaTestKit.duration("5 minutes")) {
-          protected void run() {
-            expectMsgEquals(Msg.Done);
-            system.terminate();
-          }
-        };
+        within(duration("5 minutes"), () -> {
+          expectMsgEquals(Msg.Done);
+          system.terminate();
+          return null;
+        });
       }
     };
   }
@@ -137,23 +136,28 @@ public class JEventPubSubTest {
       });
     }
 
-    public Subscriber() {
+    Subscriber() {
       getContext().setReceiveTimeout(timeout);
       subscribe(prefix);
-      receive(ReceiveBuilder.
-              matchEquals(PublisherInfo, m -> {
-                log.debug("Subscriber starting");
-                getContext().become(working(sender()));
-              }).build());
     }
 
+    @Override
+    public Receive createReceive() {
+      return receiveBuilder()
+          .matchEquals(PublisherInfo, m -> {
+            log.debug("Subscriber starting");
+            getContext().become(working(sender()));
+          }).build();
+    }
+
+
     // Actor state while working (after receiving the initial PublisherInfo message)
-    PartialFunction<Object, BoxedUnit> working(ActorRef publisher) {
-      return ReceiveBuilder.
-              match(ObserveEvent.class, e -> receivedObserveEvent(publisher, e)).
-              match(ReceiveTimeout.class, t -> receiveTimedOut()).
-              matchAny(t -> log.warning("Unknown message received: " + t)).
-              build();
+    Receive working(ActorRef publisher) {
+      return receiveBuilder()
+          .match(ObserveEvent.class, e -> receivedObserveEvent(publisher, e))
+          .match(ReceiveTimeout.class, t -> receiveTimedOut())
+          .matchAny(t -> log.warning("Unknown message received: " + t))
+          .build();
     }
 
     private void receiveTimedOut() {
@@ -177,7 +181,7 @@ public class JEventPubSubTest {
           if (count % 100 == 0) {
             double t = (System.currentTimeMillis() - startTime) / 1000.0;
             log.debug("Received {} events in {} seconds ({} per second)",
-                    count, t, count * 1.0 / t);
+                count, t, count * 1.0 / t);
           }
           publisher.tell(SubscriberAck, sender());
         }
@@ -202,9 +206,9 @@ public class JEventPubSubTest {
     // Returns the next event to publish
     private ObserveEvent nextEvent(int num) {
       return new ObserveEvent(prefix)
-        .add(jset(eventNum, num))
-        .add(jset(exposureTime, 1.0))
-        .add(jset(imageData, testImageData));
+          .add(jset(eventNum, num))
+          .add(jset(exposureTime, 1.0))
+          .add(jset(imageData, testImageData));
     }
 
     private void publish() {
@@ -223,26 +227,30 @@ public class JEventPubSubTest {
       });
     }
 
-    public Publisher(ActorRef subscriber) {
-      getContext().setReceiveTimeout(timeout);
-      subscriber.tell(PublisherInfo, self());
-
-      receive(ReceiveBuilder.
-              matchEquals(Publish, m -> {
-                publish();
-                getContext().become(publishing(sender()));
-              }).
-              matchAny(t -> log.warning("Unknown message received: " + t)).
-              build());
+    @Override
+    public Receive createReceive() {
+      return receiveBuilder()
+          .matchEquals(Publish, m -> {
+            publish();
+            getContext().become(publishing(sender()));
+          })
+          .matchAny(t -> log.warning("Unknown message received: " + t))
+          .build();
     }
 
-    PartialFunction<Object, BoxedUnit> publishing(ActorRef testActor) {
-      return ReceiveBuilder.
-              matchEquals(Publish, m -> publish()).
-              matchEquals(SubscriberAck, m -> handleSubscriberAck(testActor)).
-              match(ReceiveTimeout.class, t -> receiveTimedOut()).
-              matchAny(t -> log.warning("Unknown message received: " + t)).
-              build();
+
+    Publisher(ActorRef subscriber) {
+      getContext().setReceiveTimeout(timeout);
+      subscriber.tell(PublisherInfo, self());
+    }
+
+    Receive publishing(ActorRef testActor) {
+      return receiveBuilder().
+          matchEquals(Publish, m -> publish()).
+          matchEquals(SubscriberAck, m -> handleSubscriberAck(testActor)).
+          match(ReceiveTimeout.class, t -> receiveTimedOut()).
+          matchAny(t -> log.warning("Unknown message received: " + t)).
+          build();
     }
 
     private void handleSubscriberAck(ActorRef testActor) {

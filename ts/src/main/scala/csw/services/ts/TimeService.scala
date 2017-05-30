@@ -149,12 +149,12 @@ object TimeService {
   }
 }
 
-/**
- * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]].
- * This version is based on UntypedActor. See [[AbstractTimeServiceScheduler]]
- * for an alternate version based on [[AbstractActor]].
- */
-abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler
+///**
+// * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]].
+// * This version is based on UntypedActor. See [[AbstractTimeServiceScheduler]]
+// * for an alternate version based on [[AbstractActor]].
+// */
+//abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler
 
 /**
  * An alternate version of a Java TimeServiceScheduler for use with Akka Java8 lambda syntax

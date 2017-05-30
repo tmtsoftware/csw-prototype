@@ -1,9 +1,5 @@
 package javacsw.services.ts;
 
-import akka.actor.ActorLogging;
-import akka.actor.UntypedActor;
-import akka.event.LoggingAdapter;
-import csw.services.ts.JavaTimeServiceScheduler;
 import csw.services.ts.TimeService;
 
 import java.time.LocalDateTime;

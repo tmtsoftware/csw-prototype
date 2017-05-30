@@ -2,8 +2,8 @@ package javacsw.services.loc.tests;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import akka.testkit.javadsl.TestKit;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection.*;
 import csw.services.loc.LocationService;
@@ -43,7 +43,7 @@ public class JLocationServiceTests {
 
     @AfterClass
     public static void teardown() {
-        JavaTestKit.shutdownActorSystem(system);
+        TestKit.shutdownActorSystem(system);
         system = null;
     }
 

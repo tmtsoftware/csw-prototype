@@ -1,11 +1,10 @@
 package javacsw.services.pkg;
 
+import akka.actor.AbstractActor;
 import akka.actor.Actor;
 import akka.japi.pf.ReceiveBuilder;
-import csw.services.loc.LocationService;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
 import csw.services.loc.LocationService.Location;
+import akka.actor.AbstractActor.Receive;
 
 /**
  * LocationSubscriberClient can be used to receive updates to Locations.
@@ -17,16 +16,16 @@ import csw.services.loc.LocationService.Location;
  */
 @SuppressWarnings("unused")
 public interface ILocationSubscriberClient extends Actor {
-  /**
-   * An Akka receive partial function that can be used rather than receiving the Location message in your
-   * own code.
-   * @return Receive partial function
-   */
-  default PartialFunction<Object, BoxedUnit> locationSubscriberReceive() { // XXX not used
-    return ReceiveBuilder.
-      match(Location.class, this::locationUpdate).
-      build();
-  }
+//  /**
+//   * An Akka receive partial function that can be used rather than receiving the Location message in your
+//   * own code.
+//   * @return Receive partial function
+//   */
+//  default Receive locationSubscriberReceive() { // XXX not used
+//    return ReceiveBuilder.
+//      match(Location.class, this::locationUpdate).
+//      build();
+//  }
 
   /**
    * Start receiving location updates.  It is necessary to call this in the client when you are ready to receive updates.

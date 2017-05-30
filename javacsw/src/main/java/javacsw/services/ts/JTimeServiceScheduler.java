@@ -1,7 +1,7 @@
 package javacsw.services.ts;
 
 import akka.event.LoggingAdapter;
-import csw.services.ts.JavaTimeServiceScheduler;
+import csw.services.ts.AbstractTimeServiceScheduler;
 import csw.services.ts.TimeService;
 
 /**
@@ -14,5 +14,5 @@ import csw.services.ts.TimeService;
  * <p>
  * {@link TimeService.TimeServiceScheduler#schedule} - waits until a specific time and then sends periodic message to an actor until cancelled
  */
-public abstract class JTimeServiceScheduler extends JavaTimeServiceScheduler {
+public abstract class JTimeServiceScheduler extends AbstractTimeServiceScheduler {
 }

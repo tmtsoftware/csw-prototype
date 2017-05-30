@@ -28,4 +28,12 @@ public abstract class JAssemblyControllerWithPubSub extends AbstractAssemblyCont
     public JAssemblyControllerWithPubSub(AssemblyInfo info) {
         super(info);
     }
+
+    /**
+     * This should be used by the implementer actor's receive method.
+     * For example: return jDefaultReceive().orElse(...)
+     */
+    protected Receive jDefaultReceive() {
+        return new Receive(super.defaultReceive());
+    }
 }

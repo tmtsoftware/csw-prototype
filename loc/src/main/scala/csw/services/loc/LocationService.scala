@@ -5,6 +5,7 @@ import java.util.Optional
 import javax.jmdns._
 
 import akka.actor._
+import akka.serialization.Serialization
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
-
 import collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 
@@ -59,6 +59,7 @@ object LocationService {
         // Don't use ipv6 addresses yet, since it seems to not be working with the current akka version
         !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
       }
+
       // Get this host's primary IP address.
       // Note: The trick to getting the right one seems to be in sorting by network interface index
       // and then ignoring the loopback address.
@@ -167,6 +168,7 @@ object LocationService {
 
     /**
      * Java API to get actorRef
+     *
      * @return
      */
     def getActorRef: Optional[ActorRef] = actorRef.asJava
@@ -305,16 +307,21 @@ object LocationService {
     registry.unregisterService(si)
   }
 
-  // --- Used to get the full path URI of an actor from the actorRef ---
-  private class RemoteAddressExtensionImpl(system: ExtendedActorSystem) extends Extension {
-    def address = system.provider.getDefaultAddress
-  }
-
-  private object RemoteAddressExtension extends ExtensionKey[RemoteAddressExtensionImpl]
+  /**
+   * An Exception representing failure in registering non remote actors
+   */
+  case class LocalAkkaActorRegistrationNotAllowed(actorRef: ActorRef) extends RuntimeException(
+    s"Registration of only remote actors is allowed. Instead local actor $actorRef received."
+  )
 
   // Gets the full URI for the actor
-  private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI =
-    new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
+  private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI = {
+    val actorPath = ActorPath.fromString(Serialization.serializedActorPath(actorRef))
+    actorPath.address match {
+      case Address(_, _, None, None) => throw LocalAkkaActorRegistrationNotAllowed(actorRef)
+      case _                         => new URI(actorPath.toString)
+    }
+  }
 
   /**
    * Convenience method that gets the location service information for a given set of services.
@@ -336,7 +343,8 @@ object LocationService {
      * @param registration Set of registrations to be registered with Location Service
      * @param replyTo      optional actorRef to reply to (default: parent of this actor)
      */
-    def props(registration: Set[Registration], replyTo: Option[ActorRef] = None): Props = Props(classOf[RegistrationTracker], registration, replyTo)
+    def props(registration: Set[Registration], replyTo: Option[ActorRef] = None): Props =
+      Props(classOf[RegistrationTracker], registration, replyTo)
   }
 
   /**
@@ -350,7 +358,7 @@ object LocationService {
 
     import context.dispatcher
 
-    implicit val system = context.system
+    implicit val system: ActorSystem = context.system
 
     private val a = self
     private val actorRef = replyTo.getOrElse(context.parent)
@@ -432,6 +440,7 @@ object LocationService {
           sendLocationUpdate(unc)
         }
       }
+
       connections.get(connection).foreach(rm)
     }
 

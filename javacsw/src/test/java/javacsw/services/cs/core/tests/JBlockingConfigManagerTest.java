@@ -1,7 +1,7 @@
 package javacsw.services.cs.core.tests;
 
 import akka.actor.ActorSystem;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import javacsw.services.cs.IBlockingConfigManager;
 import javacsw.services.cs.akka.tests.JTestRepo;
@@ -24,7 +24,7 @@ public class JBlockingConfigManagerTest {
 
     @AfterClass
     public static void teardown() {
-        JavaTestKit.shutdownActorSystem(system);
+        TestKit.shutdownActorSystem(system);
         system = null;
     }
 
