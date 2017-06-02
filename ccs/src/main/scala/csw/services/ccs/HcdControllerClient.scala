@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.ActorRef
 import HcdController._
 import csw.util.akka.PublisherActorClient
-import csw.util.config.Configurations.SetupConfig
+import csw.util.itemSet.ItemSets.Setup
 
 /**
  * A client API for the HcdController actor.
@@ -17,6 +17,6 @@ class HcdControllerClient(hcdActorRef: ActorRef) extends PublisherActorClient(hc
   /**
    * Submits a configuration to the HCD
    */
-  def submit(config: SetupConfig): Unit = hcdActorRef ! Submit(config)
+  def submit(config: Setup): Unit = hcdActorRef ! Submit(config)
 
 }

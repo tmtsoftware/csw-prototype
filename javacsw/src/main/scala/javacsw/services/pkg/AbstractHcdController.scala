@@ -5,8 +5,8 @@ import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Hcd
 import csw.util.akka.PublisherActor
-import csw.util.config.Configurations.SetupConfig
-import csw.util.config.StateVariable.CurrentState
+import csw.util.itemSet.ItemSets.Setup
+import csw.util.itemSet.StateVariable.CurrentState
 
 /**
  * Supports Java subclasses of AssemblyController
@@ -31,7 +31,7 @@ abstract class AbstractHcdController(override val info: HcdInfo) extends Abstrac
    *
    * @param config            the config received
    */
-  override def process(config: SetupConfig): Unit
+  override def process(config: Setup): Unit
 
   // -- These can be called from Java based subclasses
 

@@ -2,7 +2,7 @@ package csw.services.ccs
 import scala.collection.JavaConverters._
 
 /**
- * TMT Source Code: 8/25/16.
+ * Describes the reason for a setup validation failure
  */
 object Validation {
 
@@ -59,25 +59,6 @@ object Validation {
   final case class OtherIssue(reason: String) extends ValidationIssue
 
   /**
-   * A type created for a list of Validation results
-   */
-  type ValidationList = List[Validation]
-
-  /**
-   * Test that all validations in a list of Validation are Valid
-   * @param validations a ValidationList from validation of a list of configurations
-   * @return True if all validations are Valid, else false
-   */
-  def isAllValid(validations: ValidationList): Boolean = !validations.exists(_ != Validation.Valid)
-
-  /**
-   * Test that all validations in a list of Validation are Valid
-   * @param validations a ValidationList from validation of a list of configurations
-   * @return True if all validations are Valid, else false
-   */
-  def isAllValid(validations: java.util.List[Validation]): Boolean = !validations.asScala.exists(_ != Validation.Valid)
-
-  /**
    * Base trait for the results of validating incoming configs
    * Only a subset of CommandStatus entries are also Validation (Valid, Invalid)
    */
@@ -85,7 +66,7 @@ object Validation {
 
   /**
    * The configuration or set of configurations was not valid before starting
-   * @param issue
+   * @param issue the reason the setup is invalid
    */
   final case class Invalid(issue: ValidationIssue) extends Validation
 

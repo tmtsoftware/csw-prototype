@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Supervisor.{Initialized, Running}
-import csw.util.config.Configurations.SetupConfig
-import csw.util.config.StateVariable.CurrentState
+import csw.util.itemSet.ItemSets.Setup
+import csw.util.itemSet.StateVariable.CurrentState
 
 import scala.concurrent.duration._
 
@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 object TestHcd {
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: SetupConfig)
+  case class WorkDone(config: Setup)
 }
 
 /**
@@ -32,7 +32,7 @@ case class TestHcd(info: HcdInfo, supervisor: ActorRef)
   }
 
   // Send the config to the worker for processing
-  override protected def process(config: SetupConfig): Unit = {
+  override protected def process(config: Setup): Unit = {
     context.actorOf(TestWorker.props(config, info.prefix))
   }
 
@@ -40,15 +40,15 @@ case class TestHcd(info: HcdInfo, supervisor: ActorRef)
 
 // -- Test worker actor that simulates doing some work --
 object TestWorker {
-  def props(demand: SetupConfig, prefix: String): Props = Props(classOf[TestWorker], demand, prefix)
+  def props(demand: Setup, prefix: String): Props = Props(classOf[TestWorker], demand, prefix)
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: SetupConfig)
+  case class WorkDone(config: Setup)
 }
 
 
 //class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
-class TestWorker(demand: SetupConfig, prefix: String) extends Actor with ActorLogging {
+class TestWorker(demand: Setup, prefix: String) extends Actor with ActorLogging {
 
   import TestWorker._
   import context.dispatcher

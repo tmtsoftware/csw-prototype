@@ -2,8 +2,8 @@ package csw.services.ccs
 
 import akka.actor.Actor
 import csw.util.akka.PublisherActor
-import csw.util.config.StateVariable.CurrentState
-import csw.util.config.Configurations._
+import csw.util.itemSet.StateVariable.CurrentState
+import csw.util.itemSet.ItemSets._
 
 /**
  * Command service controller
@@ -20,7 +20,7 @@ object HcdController {
    *
    * @param config describes the setup parameters to which the HCD should be configured
    */
-  final case class Submit(config: SetupConfig) extends HcdControllerMessage
+  final case class Submit(config: Setup) extends HcdControllerMessage
 
   // --- Inherited messages that this actor receives ---
 
@@ -67,6 +67,6 @@ trait HcdController extends PublisherActor[CurrentState] {
    *
    * @param config            the config received
    */
-  protected def process(config: SetupConfig): Unit
+  protected def process(config: Setup): Unit
 }
 

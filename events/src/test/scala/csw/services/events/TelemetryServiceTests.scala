@@ -3,8 +3,8 @@ package csw.services.events
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
-import csw.util.config.Events.StatusEvent
-import csw.util.config.{BooleanKey, DoubleKey, IntKey, StringKey}
+import csw.util.itemSet.Events.StatusEvent
+import csw.util.itemSet.{BooleanKey, DoubleKey, IntKey, StringKey}
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.LazyLogging
 

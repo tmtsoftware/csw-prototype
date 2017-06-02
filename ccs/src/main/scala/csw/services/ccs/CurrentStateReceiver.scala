@@ -1,7 +1,7 @@
 package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
-import csw.util.config.StateVariable.CurrentState
+import csw.util.itemSet.StateVariable.CurrentState
 
 /**
  * This class distributes CurrentState events within the single ActorSystem of a component allowing "handlers"

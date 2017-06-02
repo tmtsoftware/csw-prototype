@@ -10,7 +10,7 @@ import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor.{Initialized, Running}
 import csw.services.pkg.{Assembly, Supervisor}
-import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.itemSet.ItemSets.{Setup, SetupConfigArg}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -50,8 +50,8 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
    */
   private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Checks a single setup config
-    def validateConfig(sc: SetupConfig): Validation = {
-      if (sc.configKey.prefix != HCDExample.prefix) {
+    def validateConfig(sc: Setup): Validation = {
+      if (sc.itemSetKey.prefix != HCDExample.prefix) {
         Invalid(WrongConfigKeyIssue("Wrong prefix"))
       } else {
         val missing = sc.missingKeys(HCDExample.rateKey)

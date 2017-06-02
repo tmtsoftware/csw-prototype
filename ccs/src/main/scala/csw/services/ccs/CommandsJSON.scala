@@ -1,8 +1,7 @@
 package csw.services.ccs
 
 import com.typesafe.scalalogging.LazyLogging
-import csw.util.config.Configurations.{ObserveConfig, SequenceConfig, SetupConfig, WaitConfig}
-import csw.util.config.RunId
+import csw.util.itemSet.ItemSets.{Observe, SequenceItemSet, Setup, Wait}
 import spray.json._
 
 /**
@@ -35,11 +34,11 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private val messageKey = "message"
   private val reasonKey = "reason"
   private val resultKey = "result"
-  private val statusKey = "status"
-  private val runIdKey = "runId"
-  private val configKey = "config"
-  private val overallKey = "overall"
-  private val resultsKey = "results"
+//  private val statusKey = "status"
+//  private val runIdKey = "runId"
+//  private val configKey = "config"
+//  private val overallKey = "overall"
+//  private val resultsKey = "results"
 
   private def vtoObj(issueType: String, reason: String) = JsObject(issueKey -> JsString(issueType), reasonKey -> JsString(reason))
 
@@ -93,28 +92,18 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   import CommandStatus._
 
   private val acceptedOCSType = CommandStatus.Accepted.toString
-  private val notAcceptedOCSType = CommandStatus.NotAccepted.toString
-  private val incompleteOCSType = CommandStatus.Incomplete.toString
-  private val allCompletedOCSType = CommandStatus.AllCompleted.toString
-
-  private def overallTypeToOverall(overallIn: String): OverallCommandStatus = overallIn match {
-    case `acceptedOCSType`     => CommandStatus.Accepted
-    case `notAcceptedOCSType`  => CommandStatus.NotAccepted
-    case `incompleteOCSType`   => CommandStatus.Incomplete
-    case `allCompletedOCSType` => CommandStatus.AllCompleted
-  }
 
   private val invalidCSType = classOf[CommandStatus.Invalid].getSimpleName
-  private val validCSType = CommandStatus.Valid.toString
+  private val acceptedCSType = CommandStatus.Accepted.toString
   private val noLongerValidCSType = classOf[CommandStatus.NoLongerValid].getSimpleName
   private val completedCSType = CommandStatus.Completed.toString
-  private val completedWithResultCSType = classOf[CompletedWithResult].getSimpleName
+//  private val completedWithResultCSType = classOf[CompletedWithResult].getSimpleName
   private val inProgressCSType = classOf[CommandStatus.InProgress].getSimpleName
   private val errorCSType = classOf[CommandStatus.Error].getSimpleName
   private val abortedCSType = CommandStatus.Aborted.toString
   private val cancelledCSType = CommandStatus.Cancelled.toString
 
-  import csw.util.config.ConfigJSON._
+  import csw.util.itemSet.ItemSetJson._
 
   private def getMessage(json: JsValue): String = {
     json.asJsObject.getFields(messageKey) match {
@@ -122,9 +111,9 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
     }
   }
 
-  private def getConfig(json: JsValue): SetupConfig = {
+  private def getItemSet(json: JsValue): Setup = {
     json.asJsObject.getFields(resultKey) match {
-      case Seq(sc) => readConfig(sc)
+      case Seq(sc) => readSequenceItemSet(sc)
     }
   }
 
@@ -132,81 +121,49 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
 
   private def csWithMessage(statusType: String, message: String) = JsObject(statusTypeKey -> JsString(statusType), messageKey -> JsString(message))
 
-  private def csWithConfig(statusType: String, sc: SetupConfig) = JsObject(statusTypeKey -> JsString(statusType), resultKey -> writeConfig(sc))
+  private def csWithConfig(statusType: String, sc: Setup) = JsObject(statusTypeKey -> JsString(statusType), resultKey -> writeSequenceItemSet(sc))
 
   private def csOnly(statusType: String) = JsObject(statusTypeKey -> JsString(statusType))
 
-  implicit def CommandStatusJsonFormat: JsonFormat[CommandStatus] = new JsonFormat[CommandStatus] {
-    override def read(json: JsValue): CommandStatus = {
+  implicit def CommandStatusJsonFormat: JsonFormat[CommandResponse] = new JsonFormat[CommandResponse] {
+    override def read(json: JsValue): CommandResponse = {
       json.asJsObject.getFields(statusTypeKey) match {
         case Seq(JsString(statusType)) => statusType match {
           case `invalidCSType`             => CommandStatus.Invalid(json.convertTo[ValidationIssue])
-          case `validCSType`               => CommandStatus.Valid
+          case `acceptedCSType`               => CommandStatus.Accepted
           case `noLongerValidCSType`       => CommandStatus.NoLongerValid(json.convertTo[ValidationIssue])
           case `completedCSType`           => CommandStatus.Completed
           case `inProgressCSType`          => CommandStatus.InProgress(getMessage(json))
           case `errorCSType`               => CommandStatus.Error(getMessage(json))
-          case `completedWithResultCSType` => CompletedWithResult(getConfig(json))
+//          case `completedWithResultCSType` => CompletedWithResult(getConfig(json))
           case `abortedCSType`             => CommandStatus.Aborted
           case `cancelledCSType`           => CommandStatus.Cancelled
         }
       }
     }
 
-    override def write(obj: CommandStatus): JsValue = obj match {
+    override def write(obj: CommandResponse): JsValue = obj match {
       case CommandStatus.Invalid(vi)                 => csWithIssue(invalidCSType, vi)
-      case CommandStatus.Valid                       => csOnly(validCSType)
+      case CommandStatus.Accepted                    => csOnly(acceptedCSType)
       case CommandStatus.NoLongerValid(vi)           => csWithIssue(noLongerValidCSType, vi)
       case CommandStatus.Completed                   => csOnly(completedCSType)
       case CommandStatus.InProgress(message)         => csWithMessage(inProgressCSType, message)
       case CommandStatus.Error(message)              => csWithMessage(errorCSType, message)
-      case CommandStatus.CompletedWithResult(result) => csWithConfig(completedWithResultCSType, result)
+//      case CommandStatus.CompletedWithResult(result) => csWithConfig(completedWithResultCSType, result)
       case CommandStatus.Aborted                     => csOnly(abortedCSType)
       case CommandStatus.Cancelled                   => csOnly(cancelledCSType)
     }
   }
 
-  implicit def SequenceConfigJsonFormat: JsonFormat[SequenceConfig] = new JsonFormat[SequenceConfig] {
-    override def read(json: JsValue): SequenceConfig = readConfig(json)
+  implicit def SequenceConfigJsonFormat: JsonFormat[SequenceItemSet] = new JsonFormat[SequenceItemSet] {
+    override def read(json: JsValue): SequenceItemSet = readSequenceItemSet(json)
 
-    override def write(obj: SequenceConfig): JsValue = {
+    override def write(obj: SequenceItemSet): JsValue = {
       obj match {
-        case sc: SetupConfig   => writeConfig(sc)
-        case oc: ObserveConfig => writeConfig(oc)
-        case wc: WaitConfig    => writeConfig(wc)
+        case sc: Setup   => writeSequenceItemSet(sc)
+        case oc: Observe => writeSequenceItemSet(oc)
+        case wc: Wait    => writeSequenceItemSet(wc)
       }
     }
   }
-
-  implicit def CommandResultPairJsonFormat: JsonFormat[CommandResultPair] = new JsonFormat[CommandResultPair] {
-    override def read(json: JsValue): CommandResultPair = json.asJsObject.getFields(statusKey, configKey) match {
-      case Seq(status, config) =>
-        val cs = status.convertTo[CommandStatus]
-        val cconfig = config.convertTo[SequenceConfig]
-        CommandResultPair(cs, cconfig)
-    }
-
-    override def write(obj: CommandResultPair): JsObject =
-      JsObject(
-        statusKey -> obj.status.toJson,
-        configKey -> obj.config.toJson
-      )
-  }
-
-  implicit def CommandResultJsonFormat: RootJsonFormat[CommandResult] = new RootJsonFormat[CommandResult] {
-    override def read(json: JsValue): CommandResult = json.asJsObject.getFields(runIdKey, overallKey, resultsKey) match {
-      case Seq(JsString(runId), JsString(overall), results) =>
-        val runIdOut = RunId(runId)
-        val overallOut = overallTypeToOverall(overall)
-        val resultsOut = CommandResults(results.convertTo[List[CommandResultPair]])
-        CommandResult(runIdOut, overallOut, resultsOut)
-    }
-
-    override def write(obj: CommandResult): JsValue = JsObject(
-      runIdKey -> JsString(obj.runId.id),
-      overallKey -> JsString(obj.overall.toString),
-      resultsKey -> JsArray(obj.details.results.map(_.toJson): _*)
-    )
-  }
-
 }

@@ -8,9 +8,9 @@ import scala.collection.JavaConverters._
 import java.io.StringReader
 
 import csw.services.ccs._
-import csw.util.config._
-import csw.util.config.Configurations._
-import csw.util.config.Events._
+import csw.util.itemSet._
+import csw.util.itemSet.ItemSets._
+import csw.util.itemSet.Events._
 
 import scala.concurrent.{Await, Future}
 import akka.pattern.ask
@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
 import csw.services.loc.ComponentId
 import csw.services.pkg.Component.AssemblyInfo
 import csw.services.sequencer.SequencerEnv
-import csw.util.config.UnitsOfMeasure._
+import csw.util.itemSet.UnitsOfMeasure._
 
 // Utility functions, shortcuts
 import SequencerEnv._

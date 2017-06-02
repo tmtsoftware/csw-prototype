@@ -4,9 +4,9 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.util.config.Configurations.SetupConfig
-import csw.util.config.StateVariable.CurrentState
-import csw.util.config.StringKey
+import csw.util.itemSet.ItemSets.{ItemSetInfo, Setup}
+import csw.util.itemSet.StateVariable.CurrentState
+import csw.util.itemSet.{ObsId, StringKey}
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
@@ -18,7 +18,7 @@ object HcdControllerTests {
   val position = StringKey("position")
 
   object TestHcdController {
-    def props(): Props = Props(classOf[TestHcdController])
+    def props(): Props = Props(new TestHcdController())
   }
 
   class TestHcdController extends HcdController with Actor with ActorLogging {
@@ -27,7 +27,7 @@ object HcdControllerTests {
     private val worker = context.actorOf(TestWorker.props())
 
     // Send the config to the worker for processing
-    override protected def process(config: SetupConfig): Unit = {
+    override protected def process(config: Setup): Unit = {
       worker ! TestWorker.Work(config)
     }
 
@@ -41,13 +41,13 @@ object HcdControllerTests {
 
   // -- Test worker actor that simulates doing some work --
   object TestWorker {
-    def props(): Props = Props(classOf[TestWorker])
+    def props(): Props = Props(new TestWorker())
 
     // Work to do
-    case class Work(config: SetupConfig)
+    case class Work(config: Setup)
 
     // Message sent to self to simulate work done
-    case class WorkDone(config: SetupConfig)
+    case class WorkDone(config: Setup)
 
     // Message to request the current state values
     case object RequestCurrentState
@@ -99,7 +99,8 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix).add(position.set("IR3"))
+    val info = ItemSetInfo(ObsId("001"))
+    val config = Setup(info, testPrefix).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {

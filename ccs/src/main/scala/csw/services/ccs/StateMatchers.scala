@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.util.Timeout
 import csw.util.akka.PublisherActor.{Subscribe, Unsubscribe}
-import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.itemSet.StateVariable.{CurrentState, DemandState}
 
 import scala.annotation.varargs
 import scala.concurrent.duration._
@@ -41,7 +41,7 @@ case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
  */
 case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extends StateMatcher {
 
-  import csw.util.config.Item
+  import csw.util.itemSet.Item
 
   def prefix = demand.prefix
 

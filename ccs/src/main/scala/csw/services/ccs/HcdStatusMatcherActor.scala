@@ -3,9 +3,9 @@ package csw.services.ccs
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import csw.util.akka.PublisherActor
-import csw.util.config.StateVariable
-import csw.util.config.StateVariable.{CurrentState, DemandState, Matcher}
-import csw.util.config.RunId
+import csw.util.itemSet.StateVariable
+import csw.util.itemSet.StateVariable.{CurrentState, DemandState, Matcher}
+import csw.util.itemSet.RunId
 
 import scala.concurrent.duration._
 

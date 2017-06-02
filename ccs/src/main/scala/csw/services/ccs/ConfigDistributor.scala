@@ -1,12 +1,10 @@
 package csw.services.ccs
 
-import csw.services.ccs.Validation.{Valid, Validation}
-import csw.util.config.StateVariable.{DemandState, Matcher}
+import csw.util.itemSet.StateVariable.{DemandState, Matcher}
 import akka.actor.{ActorContext, ActorRef}
 import akka.util.Timeout
 import csw.services.loc.LocationService.ResolvedAkkaLocation
-import csw.util.config.Configurations.SetupConfigArg
-import csw.util.config.{RunId, StateVariable}
+import csw.util.itemSet.{RunId, StateVariable}
 
 import scala.concurrent.duration._
 
@@ -51,26 +49,5 @@ case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaL
       case ResolvedAkkaLocation(_, _, prefix, actorRefOpt) if prefix == targetPrefix => actorRefOpt
     }
     x.flatten
-  }
-
-  /**
-   * This method can be called from the setup method of an assembly to distribute parts of the configs to HDCs based on the
-   * prefix. If the prefix of a SetupConfig matches the one for the HCD, it is sent to that HCD.
-   *
-   * @param configArg contains one or more configs
-   * @param replyTo   send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
-   * @return Valid if locationsResolved, otherwise Invalid
-   */
-  def distributeSetupConfigs(configArg: SetupConfigArg, replyTo: Option[ActorRef] = None): Unit = {
-    val pairs = for {
-      config <- configArg.configs
-      actorRef <- getActorRefs(config.prefix)
-    } yield {
-      actorRef ! HcdController.Submit(config)
-      (actorRef, DemandState(config))
-    }
-    val hcds = pairs.map(_._1).toSet
-    val demandStates = pairs.map(_._2)
-    matchDemandStates(demandStates, hcds, replyTo, configArg.info.runId)
   }
 }

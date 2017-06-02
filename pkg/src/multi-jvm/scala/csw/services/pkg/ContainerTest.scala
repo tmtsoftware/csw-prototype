@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient}
 import csw.services.ccs.AssemblyController._
-import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult}
+import csw.services.ccs.CommandStatus._
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
@@ -71,7 +71,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             Await.result(LocationService.resolve(connections), timeout.duration)
 
             // Use actor API
-            assembly1 ! Submit(TestConfig.testConfigArg)
+            assembly1 ! Submit(TestConfig.testConfig1)
 
             val validationResult = expectMsgType[CommandResult]
             assert(validationResult.overall == Accepted)

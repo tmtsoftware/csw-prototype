@@ -1,13 +1,11 @@
 package javacsw.services.events;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
 import akka.util.Timeout;
-import csw.services.events.EventService;
 import csw.services.events.TelemetryService;
 import csw.services.events.TelemetryService$;
-import csw.util.config.Events.StatusEvent;
+import csw.util.itemSet.Events.StatusEvent;
 
 import java.util.List;
 import java.util.Optional;

@@ -5,12 +5,12 @@ import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.events.EventService.*;
 
-import static javacsw.util.config.JItems.*;
+import static javacsw.util.itemSet.JItems.*;
 
 import csw.services.loc.LocationService;
-import csw.util.config.Events.*;
-import csw.util.config.IntKey;
-import csw.util.config.StringKey;
+import csw.util.itemSet.Events.*;
+import csw.util.itemSet.IntKey;
+import csw.util.itemSet.StringKey;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

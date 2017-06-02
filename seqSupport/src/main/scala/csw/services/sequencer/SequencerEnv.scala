@@ -11,7 +11,7 @@ import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.ContainerComponent
-import csw.util.config.Configurations.SetupConfig
+import csw.util.itemSet.ItemSets.Setup
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -86,7 +86,7 @@ object SequencerEnv {
    * @param actorRef the HCD actor
    */
   case class HcdClient(actorRef: ActorRef) {
-    def submit(config: SetupConfig): Unit = {
+    def submit(config: Setup): Unit = {
       actorRef ! Submit(config)
     }
   }

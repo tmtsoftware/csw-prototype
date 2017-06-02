@@ -1,6 +1,6 @@
 package csw.services
 
-import csw.util.config.Events.EventServiceEvent
+import csw.util.itemSet.Events.EventServiceEvent
 
 /**
  * == Event Publisher ==

@@ -13,7 +13,7 @@ public class JCommandStatus {
    * The configuration or set of configurations was not valid before starting
    * @param issue an issue that caused the input configuration to be invalid
    */
-  public static CommandStatus.CommandStatus Invalid(ValidationIssue issue) {
+  public static CommandStatus.CommandResponse Invalid(ValidationIssue issue) {
     return new CommandStatus.Invalid(issue);
   }
 
@@ -25,25 +25,25 @@ public class JCommandStatus {
   /**
    * The configuration or set of configurations was valid and started
    */
-  public static final CommandStatus.CommandStatus Valid = CommandStatus.Valid$.MODULE$;
+  public static final CommandStatus.CommandResponse Valid = CommandStatus.Valid$.MODULE$;
 
 
   /**
    * The command has completed successfully
    */
-  public static final CommandStatus.CommandStatus Completed = CommandStatus.Completed$.MODULE$;
+  public static final CommandStatus.CommandResponse Completed = CommandStatus.Completed$.MODULE$;
 
   /**
    * The command was aborted
    * Aborted means that the command/actions were stopped immediately.
    */
-  public static final CommandStatus.CommandStatus Aborted = CommandStatus.Aborted$.MODULE$;
+  public static final CommandStatus.CommandResponse Aborted = CommandStatus.Aborted$.MODULE$;
 
   /**
    * The command was cancelled
    * Cancelled means the command/actions were stopped at the next convenient place. This is usually appropriate for
    */
-  public static final CommandStatus.CommandStatus Cancelled = CommandStatus.Cancelled$.MODULE$;
+  public static final CommandStatus.CommandResponse Cancelled = CommandStatus.Cancelled$.MODULE$;
 
   /**
    * A multi-config arg has been accepted for all parts

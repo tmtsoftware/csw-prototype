@@ -4,8 +4,9 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import csw.services.ccs.CurrentStateReceiver.AddPublisher
 import csw.util.akka.PublisherActor.Subscribe
-import csw.util.config.Configurations.ConfigKey
-import csw.util.config.StateVariable.CurrentState
+import csw.util.itemSet.ItemSets.{ItemSetInfo, ItemSetKey}
+import csw.util.itemSet.ObsId
+import csw.util.itemSet.StateVariable.CurrentState
 import org.scalatest._
 
 /**
@@ -17,9 +18,11 @@ class CurrentStateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCom
   def stateReceiver = system.actorOf(CurrentStateReceiver.props)
 
   val ck1: String = "wfos.blue.filter"
-  val ckw: ConfigKey = ck1
+  val ckw: ItemSetKey = ck1
   val ck2: String = "tcs.tckPk.zenithAngle"
-  val ckt: ConfigKey = ck2
+  val ckt: ItemSetKey = ck2
+
+  val itemSetInfo = ItemSetInfo(ObsId("001"))
 
   describe("Test basic operation") {
 

@@ -3,8 +3,8 @@ package javacsw.services.ccs;
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.util.Timeout;
-import csw.util.config.RunId;
-import csw.util.config.StateVariable;
+import csw.util.itemSet.RunId;
+import csw.util.itemSet.StateVariable;
 
 import java.util.List;
 import java.util.Set;

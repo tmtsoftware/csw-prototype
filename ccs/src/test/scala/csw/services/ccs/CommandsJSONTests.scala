@@ -3,8 +3,8 @@ package csw.services.ccs
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.{OtherIssue, ValidationIssue, WrongInternalStateIssue}
-import csw.util.config.Configurations.{ObserveConfig, SequenceConfig, SetupConfig}
-import csw.util.config.{DoubleKey, RunId, StringKey, UnitsOfMeasure}
+import csw.util.itemSet.ItemSets.{ItemSetInfo, SequenceItemSet, Setup}
+import csw.util.itemSet._
 import org.scalatest.FunSpec
 import spray.json._
 
@@ -13,6 +13,8 @@ import spray.json._
  */
 class CommandsJSONTests extends FunSpec with LazyLogging {
   import CommandsJSON._
+
+  val itemSetInfo = ItemSetInfo(ObsId("001"))
 
   describe("Overall Tests") {
     it("should work with validation issues") {
@@ -30,65 +32,52 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
     }
 
     it("should work with command status") {
-      var csIn: CommandStatus = CommandStatus.Invalid(OtherIssue("No Good reasons"))
+      var csIn: CommandResponse = CommandStatus.Invalid(OtherIssue("No Good reasons"))
       var json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      var csOut = json.convertTo[CommandStatus]
+      var csOut = json.convertTo[CommandResponse]
       assert(csIn == csOut)
-
-      csIn = Valid
-      json = csIn.toJson
-      //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
-      assert(csIn.equals(csOut))
 
       csIn = NoLongerValid(WrongInternalStateIssue("wrong state!"))
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
 
       csIn = Completed
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
 
       csIn = InProgress("I'm in progress!")
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
 
       csIn = Error("I'm an error!")
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
 
       val k1 = StringKey("test")
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val sc = SetupConfig("wfos.blue.det").madd(i1, i2)
-
-      csIn = CompletedWithResult(sc)
-      json = csIn.toJson
-      //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
-      logger.info(s"cs: $csOut")
-      assert(csIn.equals(csOut))
+      val sc = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
 
       csIn = Aborted
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
 
       csIn = Cancelled
       json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
-      csOut = json.convertTo[CommandStatus]
+      csOut = json.convertTo[CommandResponse]
       assert(csIn.equals(csOut))
     }
 
@@ -97,51 +86,13 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val scIn: SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
+      val scIn: SequenceItemSet = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
 
       val json = scIn.toJson
       logger.info(s"json: ${json.prettyPrint}")
-      val scOut = json.convertTo[SequenceConfig]
+      val scOut = json.convertTo[SequenceItemSet]
       logger.info(s"cs: $scOut")
       assert(scIn.equals(scOut))
-    }
-
-    it("should work with CommandResultPair") {
-      val k1 = StringKey("test")
-      val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
-      val k2 = DoubleKey("MyDouble")
-      val i2 = k2.set(1000.34)
-      val sc: SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
-
-      val crIn = CommandResultPair(CommandStatus.Completed, sc)
-
-      val json = crIn.toJson
-      logger.info(s"json: ${json.prettyPrint}")
-      val crOut = json.convertTo[CommandResultPair]
-      logger.info(s"cr: $crOut")
-      assert(crIn.equals(crOut))
-    }
-
-    it("Should work with command result") {
-      val r = RunId()
-      val o = CommandStatus.Accepted
-      val k1 = StringKey("test")
-      val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
-      val k2 = DoubleKey("test2")
-      val i2 = k2.set(1000.34)
-      val cr = CommandResults(List(
-        CommandResultPair(Completed, SetupConfig("wfos.blue").add(i1)),
-        CommandResultPair(Invalid(OtherIssue("What the fuck")), ObserveConfig("wfos.blue.det").madd(i1, i2))
-      ))
-      val crIn: CommandResult = CommandResult(r, o, cr)
-
-      val json: JsValue = crIn.toJson
-
-      logger.info(s"json: ${json.prettyPrint}")
-
-      val crOut = json.convertTo[CommandResult]
-      logger.info(s"cr: $crOut")
-      assert(crIn.equals(crOut))
     }
 
   }

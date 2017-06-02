@@ -1,7 +1,7 @@
 package csw.services.event_old
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import csw.util.config.ConfigSerializer
+import csw.util.itemSet.ItemSetSerializer
 import org.hornetq.api.core.client._
 import java.util.UUID
 
@@ -84,7 +84,7 @@ trait EventSubscriber extends Actor with ActorLogging {
 // Worker class used to process incoming messages rather than block the receiver thread
 // while unpacking the message
 private case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
-  import ConfigSerializer._
+  import ItemSetSerializer._
   override def receive: Receive = {
     case message: ClientMessage =>
       try {

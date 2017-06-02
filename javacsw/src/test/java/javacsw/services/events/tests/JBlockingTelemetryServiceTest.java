@@ -10,10 +10,10 @@ import akka.japi.Creator;
 import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
-import csw.util.config.DoubleKey;
-import csw.util.config.Events.*;
-import csw.util.config.IntKey;
-import csw.util.config.StringKey;
+import csw.util.itemSet.DoubleKey;
+import csw.util.itemSet.Events.*;
+import csw.util.itemSet.IntKey;
+import csw.util.itemSet.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.util.config.JItems.*;
+import static javacsw.util.itemSet.JItems.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 

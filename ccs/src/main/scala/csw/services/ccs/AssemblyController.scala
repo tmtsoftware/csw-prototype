@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
 import csw.services.ccs.Validation.Validation
-import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg}
+import csw.util.itemSet.ItemSets._
 
 object AssemblyController {
 
@@ -18,9 +18,9 @@ object AssemblyController {
    * When the work for the config has been completed, a Completed message is sent
    * (or an Error message, if an error occurred).
    *
-   * @param config the configuration to execute
+    * @param itemset the configuration to execute
    */
-  case class Submit(config: ControlConfigArg) extends AssemblyControllerMessage
+  case class Submit(itemset: ControlItemSet) extends AssemblyControllerMessage
 
   /**
    * Message to submit a oneway config to the assembly.
@@ -28,87 +28,82 @@ object AssemblyController {
    * indicating that config is valid (or invalid).
    * There will be no messages on completion.
    *
-   * @param config the configuration to execute
+    * @param itemset the configuration to execute
    */
-  case class OneWay(config: ControlConfigArg) extends AssemblyControllerMessage
+  case class OneWay(itemset: ControlItemSet) extends AssemblyControllerMessage
 
 }
 
 /**
- * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
+ * Base trait for an assembly controller actor that reacts immediately to Setup or Observe messages.
  */
 trait AssemblyController {
   this: Actor =>
 
-  import CommandStatus._
   import AssemblyController._
-  import context.dispatcher
-
-  // Optional actor waiting for current HCD states to match demand states
-  //private var stateMatcherActor: Option[ActorRef] = None
 
   /**
    * Receive actor messages
    */
   protected def controllerReceive: Receive = {
-    case Submit(configArg) =>
-      configArg match {
-        case sca: SetupConfigArg   => setupSubmit(sca, oneway = false, sender())
-        case oca: ObserveConfigArg => observeSubmit(oca, oneway = false, sender())
+    case Submit(controlItemSet) =>
+      controlItemSet match {
+        case si: Setup => setupSubmit(si, oneway = false, sender())
+        case oi: Observe => observeSubmit(oi, oneway = false, sender())
       }
 
-    case OneWay(configArg) =>
-      configArg match {
-        case sca: SetupConfigArg   => setupSubmit(sca, oneway = true, sender())
-        case oca: ObserveConfigArg => observeSubmit(oca, oneway = true, sender())
+    case OneWay(controlItemSet) =>
+      controlItemSet match {
+        case sca: Setup => setupSubmit(sca, oneway = true, sender())
+        case oca: Observe => observeSubmit(oca, oneway = true, sender())
       }
   }
 
   /**
    * Called for Submit messages
    *
-   * @param sca  the SetupConfigArg received
+   * @param s  the Setup received
    * @param oneway  true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
-  private def setupSubmit(sca: SetupConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
-    val statusReplyTo = if (oneway) None else Some(replyTo)
-    val validations = setup(sca, statusReplyTo)
+  private def setupSubmit(s: Setup, oneway: Boolean, replyTo: ActorRef): Unit = {
+    val completionReplyTo = if (oneway) None else Some(replyTo)
+    val validation = setup(s, completionReplyTo)
     // The result for validation is sent here for oneway and submit
-    val validationCommandResult = validationsToCommandResult(sca.info.runId, sca.configs, validations)
+    val validationCommandResult = CommandStatus.validationAsCommandStatus(validation)
     replyTo ! validationCommandResult
   }
 
   /**
-   * Called for Submit messages with observe config arg
+   * Called for Observe messages received
    *
-   * @param oca  the ObserveConfigArg received
+   * @param o  the Observe received
    * @param oneway  true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
-  private def observeSubmit(oca: ObserveConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
-    val statusReplyTo = if (oneway) None else Some(replyTo)
-    val validations = observe(oca, statusReplyTo)
+  private def observeSubmit(o: Observe, oneway: Boolean, replyTo: ActorRef): Unit = {
+    val completionReplyTo = if (oneway) None else Some(replyTo)
+    val validation = observe(o, completionReplyTo)
 
-    val validationCommandResult = validationsToCommandResult(oca.info.runId, oca.configs, validations)
+    val validationCommandResult = CommandStatus.validationAsCommandStatus(validation)
     replyTo ! validationCommandResult
   }
 
   /**
-   * Called to process the setup config and reply to the given actor with the command status.
+   * Called to process a setup config and reply to the given actor with the command status.
    *
-   * @param configArg contains a list of setup configurations
+   * @param s contains the setup configuration
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): List[Validation] = List.empty[Validation]
+  protected def setup(s: Setup, replyTo: Option[ActorRef]): Validation = Validation.Valid
 
   /**
-   * Called to process the observe config and reply to the given actor with the command status.
+   * Called to process an observe config and reply to the given actor with the command status.
    *
-   * @param configArg contains a list of observe configurations
+   * @param o contains the observe configuration
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def observe(configArg: ObserveConfigArg, replyTo: Option[ActorRef]): List[Validation] = List.empty[Validation]
+  protected def observe(o: Observe, replyTo: Option[ActorRef]): Validation = Validation.Valid
 }

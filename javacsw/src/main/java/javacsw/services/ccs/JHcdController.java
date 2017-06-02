@@ -1,10 +1,8 @@
 package javacsw.services.ccs;
 
 import csw.services.ccs.HcdController;
-import csw.util.config.Configurations;
-import csw.util.config.StateVariable;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
+import csw.util.itemSet.ItemSets;
+import csw.util.itemSet.StateVariable;
 
 /**
  * Parent class of HCD controllers implemented in Java
@@ -39,7 +37,7 @@ abstract public class JHcdController extends AbstractHcdController {
    * (possibly from a worker actor) to indicate changes in the current HCD state.
    */
   @Override
-  public /*protected*/ abstract void process(Configurations.SetupConfig config);
+  public /*protected*/ abstract void process(ItemSets.Setup config);
 
   /**
    * A request to the implementing actor to publish the current state value

@@ -4,13 +4,13 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import csw.services.ccs.CommandStatus.{CommandStatus, Completed, Error}
+import csw.services.ccs.CommandStatus.{CommandResponse, Completed, Error}
 import csw.services.ccs.CurrentStateReceiver.{AddPublisher, RemovePublisher}
-import csw.util.config.Configurations.ConfigKey
-import csw.util.config.IntKey
-import csw.util.config.UnitsOfMeasure.encoder
+import csw.util.itemSet.ItemSets.ItemSetKey
+import csw.util.itemSet.IntKey
+import csw.util.itemSet.UnitsOfMeasure.encoder
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
-import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.itemSet.StateVariable.{CurrentState, DemandState}
 import akka.pattern.{ask, pipe}
 import csw.util.akka.PublisherActor.Subscribe
 
@@ -30,12 +30,12 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
   def stateReceiver: ActorRef = system.actorOf(CurrentStateReceiver.props)
 
   val movePrefix = s"WFOS.filter.move"
-  val moveCK: ConfigKey = movePrefix
+  val moveCK: ItemSetKey = movePrefix
   val posKey = IntKey("position")
   def moveCS(pos: Int): CurrentState = CurrentState(moveCK).add(posKey -> pos withUnits encoder)
 
   val datumPrefix = s"WFOS.filter.datum"
-  val datumCK: ConfigKey = datumPrefix
+  val datumCK: ItemSetKey = datumPrefix
   // IF a dataum cs is found in the CurrentData then it's successful
   def datumCS() = CurrentState(datumCK)
 
@@ -113,11 +113,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = singleMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Completed)
 
@@ -140,11 +140,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = singleMatcher(sr, 2.seconds)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Error("Current state matching timed out"))
 
@@ -167,11 +167,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Completed)
 
@@ -199,11 +199,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds2), DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds2), DemandMatcher(ds))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Completed)
 
@@ -228,11 +228,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds), PresenceMatcher(datumCK.prefix))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds), PresenceMatcher(datumCK.prefix))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Completed)
 
@@ -259,11 +259,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds, withUnits = true))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds, withUnits = true))).mapTo[CommandResponse].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandResponse])
 
       msgOut should be(Completed)
 

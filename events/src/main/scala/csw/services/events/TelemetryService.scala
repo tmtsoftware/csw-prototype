@@ -6,8 +6,8 @@ import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
-import csw.util.config.ConfigSerializer.{read, write}
-import csw.util.config.Events.StatusEvent
+import csw.util.itemSet.ItemSetSerializer.{read, write}
+import csw.util.itemSet.Events.StatusEvent
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration.Duration

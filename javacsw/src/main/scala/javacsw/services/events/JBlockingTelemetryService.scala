@@ -5,7 +5,7 @@ import java.util.Optional
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events._
-import csw.util.config.Events.StatusEvent
+import csw.util.itemSet.Events.StatusEvent
 
 import scala.concurrent.duration.FiniteDuration
 import scala.compat.java8.OptionConverters._

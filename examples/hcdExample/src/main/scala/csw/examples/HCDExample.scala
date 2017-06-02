@@ -10,9 +10,9 @@ import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
 import csw.services.pkg.{Hcd, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
-import csw.util.config.Configurations.SetupConfig
-import csw.util.config.Events.StatusEvent
-import csw.util.config.IntKey
+import csw.util.itemSet.ItemSets.Setup
+import csw.util.itemSet.Events.StatusEvent
+import csw.util.itemSet.IntKey
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -129,7 +129,7 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   private val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))
 
   // Process a config message
-  override def process(sc: SetupConfig): Unit = {
+  override def process(sc: Setup): Unit = {
     for {
       rateItem <- sc.get(rateKey)
       rate <- rateItem.get(0)

@@ -4,30 +4,27 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.javadsl.TestKit;
 import csw.services.event_old.EventService;
 import csw.services.event_old.EventServiceSettings;
-import csw.util.config.DoubleKey;
-import csw.util.config.Events.ObserveEvent;
-import csw.util.config.IntArray;
-import csw.util.config.IntArrayKey;
-import csw.util.config.IntKey;
+import csw.util.itemSet.DoubleKey;
+import csw.util.itemSet.Events.ObserveEvent;
+import csw.util.itemSet.IntArray;
+import csw.util.itemSet.IntArrayKey;
+import csw.util.itemSet.IntKey;
 import javacsw.services.event_old.JEventService;
 import javacsw.services.event_old.JEventSubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import scala.PartialFunction;
 import scala.concurrent.duration.FiniteDuration;
-import scala.runtime.BoxedUnit;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event_old.tests.JEventPubSubTest.Msg.*;
-import static javacsw.util.config.JItems.*;
+import static javacsw.util.itemSet.JItems.*;
 
 
 /**

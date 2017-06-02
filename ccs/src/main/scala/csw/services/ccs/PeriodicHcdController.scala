@@ -1,7 +1,7 @@
 package csw.services.ccs
 
 import akka.actor._
-import csw.util.config.Configurations.SetupConfig
+import csw.util.itemSet.ItemSets.Setup
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
@@ -44,7 +44,7 @@ trait PeriodicHcdController {
   /**
    * The queue of incoming configs
    */
-  private var queue = Queue.empty[SetupConfig]
+  private var queue = Queue.empty[Setup]
 
   private var currentInterval = 1.second
 
@@ -93,7 +93,7 @@ trait PeriodicHcdController {
   /**
    * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
    */
-  protected def nextConfig: Option[SetupConfig] = {
+  protected def nextConfig: Option[Setup] = {
     if (queue.nonEmpty) {
       val (config, q) = queue.dequeue
       queue = q
@@ -104,7 +104,7 @@ trait PeriodicHcdController {
   /**
    * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
    */
-  protected def peekConfig: Option[SetupConfig] = {
+  protected def peekConfig: Option[Setup] = {
     queue.headOption
   }
 

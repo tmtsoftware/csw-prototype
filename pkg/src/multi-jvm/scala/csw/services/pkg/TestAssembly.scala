@@ -11,8 +11,8 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.Supervisor._
 import csw.util.akka.PublisherActor
 import csw.util.akka.PublisherActor.Subscribe
-import csw.util.config.StateVariable._
-import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.itemSet.StateVariable._
+import csw.util.itemSet.ItemSets.{Setup, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
@@ -64,17 +64,6 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     case LifecycleFailureInfo(state: LifecycleState, reason: String) =>
       log.info(s"Received failed state: $state for reason: $reason")
 
-    // Message from SequentialExecutor (used below) to execute a single setup config
-    case ExecuteOne(sc, commandOriginator) =>
-      for (hcdActorRef <- getActorRefs(sc.prefix)) {
-        // Submit the config to the HCD
-        hcdActorRef ! HcdController.Submit(sc)
-        // If a commandOriginator was given, start a matcher actor that will reply with the command status
-        commandOriginator.foreach { replyTo =>
-          context.actorOf(HcdStatusMatcherActor.props(List(DemandState(sc)), Set(hcdActorRef), replyTo))
-        }
-      }
-
     case x => log.error(s"Unexpected message: $x")
   }
 
@@ -92,13 +81,19 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     notifySubscribers(CurrentStates(stateMap.values.map(identity).toSeq))
   }
 
-  override def setup(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ValidationList = {
-    // Returns validations for all
-    val validations: ValidationList = validateSequenceConfigArg(sca)
-    if (isAllValid(validations)) {
-      context.actorOf(SequentialExecutor.props(self, sca, commandOriginator))
+  override def setup(s: Setup, commandOriginator: Option[ActorRef]): Validation = {
+    val validation = validateSetupConfig(s)
+    if (validation == Valid) {
+      for (hcdActorRef <- getActorRefs(s.prefix)) {
+        // Submit to the HCD
+        hcdActorRef ! HcdController.Submit(s)
+        // If a commandOriginator was given, start a matcher actor that will reply with the command status
+        commandOriginator.foreach { replyTo =>
+          context.actorOf(HcdStatusMatcherActor.props(List(DemandState(s)), Set(hcdActorRef), replyTo))
+        }
+      }
     }
-    validations
+    validation
   }
 
   /**
@@ -112,14 +107,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     x.flatten
   }
 
-  /**
-    * Performs the initial validation of the incoming SetupConfgiArg
-    */
-  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
-    sca.configs.map(config => validateOneSetupConfig(config)).toList
-  }
-
-  private def validateOneSetupConfig(sc: SetupConfig): Validation = {
+  private def validateSetupConfig(sc: Setup): Validation = {
     if (sc.exists(TestConfig.posName)) Valid
     else Invalid(WrongConfigKeyIssue("Expected a posName key"))
   }

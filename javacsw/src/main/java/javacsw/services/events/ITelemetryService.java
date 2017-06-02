@@ -7,7 +7,7 @@ import csw.services.events.TelemetryService$;
 import csw.services.events.TelemetryService.TelemetryMonitor;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
-import csw.util.config.Events.StatusEvent;
+import csw.util.itemSet.Events.StatusEvent;
 import scala.Unit;
 
 import java.util.List;

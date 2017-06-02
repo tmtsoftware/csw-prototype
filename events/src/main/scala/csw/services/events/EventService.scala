@@ -7,7 +7,7 @@ import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props, Terminated}
 import akka.util.ByteString
 import csw.services.events.EventService.EventMonitor
-import csw.util.config.ConfigSerializer._
+import csw.util.itemSet.ItemSetSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.annotation.varargs
