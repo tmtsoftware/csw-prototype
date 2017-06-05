@@ -13,19 +13,19 @@ object StateVariable {
    */
   sealed trait StateVariable extends Serializable {
     /**
-      * A name identifying the type of itemSet, such as "setup", "observe".
-      * This is used in the JSON and toString output.
-      */
+     * A name identifying the type of itemSet, such as "setup", "observe".
+     * This is used in the JSON and toString output.
+     */
     def typeName: String
 
     /**
-      * identifies the target subsystem
-      */
+     * identifies the target subsystem
+     */
     val itemSetKey: ItemSetKey
 
     /**
-      * an optional initial set of items (keys with values)
-      */
+     * an optional initial set of items (keys with values)
+     */
     val items: ItemsData
   }
 
@@ -59,7 +59,7 @@ object StateVariable {
     /**
      * This is here for Java to construct with String
      */
-    def this(info: ItemSetInfo, itemSetKey: String) = this(ItemSetKey.stringToItemSetKey(itemSetKey))
+    def this(itemSetKey: String) = this(ItemSetKey.stringToItemSetKey(itemSetKey))
 
     /**
      * Java API to create a DemandState from a SetupItemSet

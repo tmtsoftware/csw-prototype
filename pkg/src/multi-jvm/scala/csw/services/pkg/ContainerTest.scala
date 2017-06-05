@@ -73,22 +73,18 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             // Use actor API
             assembly1 ! Submit(TestConfig.testConfig1)
 
-            val validationResult = expectMsgType[CommandResult]
-            assert(validationResult.overall == Accepted)
-
-            val commandResult = expectMsgType[CommandResult]
-            assert(commandResult.details.results.size == 2)
-            assert(commandResult.overall == AllCompleted)
+            val validationResult = expectMsgType[CommandResponse]
+            assert(validationResult == Accepted)
 
             // Use client wrapper
             val client = AssemblyControllerClient(assembly1)
-            val result = Await.result(client.submit(TestConfig.testConfigArg), timeout.duration)
-            assert(result.overall == AllCompleted)
+            val result = Await.result(client.submit(TestConfig.testConfig1), timeout.duration)
+            assert(result == Accepted)
 
             // Test dummy request and blocking client
             val blockingClient = BlockingAssemblyClient(client)
-            val result2 = blockingClient.submit(TestConfig.testConfigArg)
-            assert(result2.overall == AllCompleted)
+            val result2 = blockingClient.submit(TestConfig.testConfig2)
+            assert(result2 == Accepted)
           }
         }
         println("\nContainer1 tests passed\n")

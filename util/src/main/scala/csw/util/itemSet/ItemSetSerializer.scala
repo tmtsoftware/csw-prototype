@@ -60,7 +60,6 @@ object ItemSetSerializer {
     def read(bytes: Array[Byte]): Wait = readObj[Wait](bytes)
   }
 
-
   implicit object SequenceItemSetSerializer extends ItemSetSerializer[SequenceItemSet] {
     def write(in: SequenceItemSet): Array[Byte] = writeObj(in)
 

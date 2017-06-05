@@ -6,6 +6,7 @@ import csw.util.itemSet.ItemSets.Setup;
 import csw.util.itemSet.Events.ObserveEvent;
 import csw.util.itemSet.Events.StatusEvent;
 import csw.util.itemSet.Events.SystemEvent;
+import javacsw.util.itemSet.JItems;
 import javacsw.util.itemSet.JSubsystem;
 import org.junit.Test;
 import spray.json.JsValue;
@@ -30,6 +31,7 @@ public class JJSONTests {
   private static final String ck2 = "wfos.red.filter";
   private static final String ck3 = "wfos.red.detector";
 
+  private static final ItemSets.ItemSetInfo info = new ItemSets.ItemSetInfo(new ObsId("Obs001"));
 
 
   @Test
@@ -41,38 +43,6 @@ public class JJSONTests {
     Subsystem sub = ItemSetJson.subsystemFormat().read(json);
     assertTrue(sub.equals(wfos));
   }
-
-    /*
-    @Test
-    public void testCustomRaDecItem() {
-        GenericKey<RaDec> k1 = new GenericKey<>("RaDec", "coords", RaDec.raDecFormat());
-        RaDec c1 = new RaDec(7.3, 12.1);
-        RaDec c2 = new RaDec(9.1, 2.9);
-        Item<RaDec> i1 = jset(k1, c1, c2);
-        SetupConfig sc1 = new SetupConfig(ck).add(i1);
-        assertTrue(sc1.get(k1).get().values().size() == 2);
-        assertTrue(sc1.get(k1).get().jvalue(0).equals(c1));
-        assertTrue(sc1.get(k1).get().jvalue(1).equals(c2));
-
-        JsValue sc1out = ConfigJSON.writeConfig(sc1);
-//        System.out.println("sc1out: " + sc1out.prettyPrint());
-
-        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
-        assertTrue(sc1.equals(sc1in));
-        assertTrue(sc1in.get(k1).get().values().size() == 2);
-        assertTrue(sc1in.get(k1).get().jvalue(0).equals(c1));
-        assertTrue(sc1in.get(k1).get().jvalue(1).equals(c2));
-        RaDec cc1 = sc1in.get(k1).get().jvalue(0);
-        assertTrue(cc1.ra() == 7.3);
-        assertTrue(cc1.dec() == 12.1);
-        RaDec cc2 = sc1in.get(k1).get().jvalue(1);
-        assertTrue(cc2.ra() == 9.1);
-        assertTrue(cc2.dec() == 2.9);
-
-        SetupConfig sc2 = new SetupConfig(ck).jset(k1, JUnitsOfMeasure.none, c1, c2);
-        assertTrue(sc2.equals(sc1));
-    }
-    */
 
   @Test
   public void testConcreteItems() {
@@ -170,18 +140,18 @@ public class JJSONTests {
     BooleanItem i6 = jset(k6, false);
     StringItem i7 = jset(k7, "GG495").withUnits(degrees);
 
-    // Should encode/decode a SetupConfig
+    // Should encode/decode a Setup
     {
-      Setup c1 = new Setup(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+      Setup c1 = new Setup(info, ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(c1.size() == 7);
       JsValue c1out = ItemSetJson.writeSequenceItemSet(c1);
       Setup c1in = ItemSetJson.readSequenceItemSet(c1out);
       assertTrue(jvalue(jitem(c1in, k3)) == 1234L);
       assertEquals(c1, c1in);
     }
-    // Should encode/decode a ObserveConfig
+    // Should encode/decode a Observe
     {
-      Observe c1 = new Observe(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+      Observe c1 = new Observe(info, ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(c1.size() == 7);
       JsValue c1out = ItemSetJson.writeSequenceItemSet(c1);
       Observe c1in = ItemSetJson.readSequenceItemSet(c1out);
@@ -224,7 +194,7 @@ public class JJSONTests {
     double[][] mIn = {{1.0, 2.0, 3.0}, {4.1, 5.1, 6.1}, {7.2, 8.2, 9.2}};
     DoubleMatrix m1 = DoubleMatrix(mIn);
     DoubleMatrixItem di = jset(k1, m1);
-    Setup sc1 = new Setup(ck).add(di);
+    Setup sc1 = new Setup(info, ck).add(di);
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
@@ -243,7 +213,7 @@ public class JJSONTests {
     // Should allow array values
     DoubleArrayKey k1 = new DoubleArrayKey("myVector");
     DoubleArray m1 = DoubleArray(new double[]{1.0, 2.0, 3.0});
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1.data());
@@ -264,7 +234,7 @@ public class JJSONTests {
     float[][] mIn = {{1.0f, 2.0f, 3.0f}, {4.1f, 5.1f, 6.1f}, {7.2f, 8.2f, 9.2f}};
     FloatMatrix m1 = FloatMatrix(mIn);
 
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
@@ -283,7 +253,7 @@ public class JJSONTests {
     FloatArrayKey k1 = FloatArrayKey("myArray");
     float[] m1In = new float[]{1.0f, 2.0f, 3.0f};
     FloatArray m1 = FloatArray(m1In);
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
@@ -303,7 +273,7 @@ public class JJSONTests {
     int[][] m1In = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     IntMatrix m1 = IntMatrix(m1In);
 
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
@@ -323,7 +293,7 @@ public class JJSONTests {
     IntArrayKey k1 = IntArrayKey("myVector");
     int[] m1In = {1, 2, 3};
     int[] m2In = {4, 5, 6};
-    Setup sc1 = new Setup(ck).add(jset(k1, m1In, m2In));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1In, m2In));
     assertTrue(sc1.size() == 1);
     assertTrue(jitem(sc1, k1).size() == 2);
     //System.out.println("Its: " + jitem(sc1, k1).values());
@@ -344,7 +314,7 @@ public class JJSONTests {
     ByteMatrixKey k1 = new ByteMatrixKey("myMatrix");
     byte[][] m1In = new byte[][]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     ByteMatrix m1 = ByteMatrix(m1In);
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
@@ -364,7 +334,7 @@ public class JJSONTests {
     ByteArrayKey k1 = new ByteArrayKey("myArray");
     byte[] m1In = new byte[]{1, 2, 3};
     ByteArray m1 = ByteArray(m1In);
-    Setup sc1 = new Setup(ck).add(jset(k1, m1));
+    Setup sc1 = new Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
@@ -384,7 +354,7 @@ public class JJSONTests {
     ShortMatrixKey k1 = new ShortMatrixKey("myMatrix");
     short[][] m1In = new short[][ ]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     ShortMatrix m1 = ShortMatrix(m1In);
-    Setup sc1 = jadd(SetupConfig(ck), jset(k1, m1));
+    Setup sc1 = jadd(JItems.Setup(info, ck), jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
@@ -406,7 +376,7 @@ public class JJSONTests {
     ShortArrayKey k2 = ShortArrayKey("myArray2");
     short[] m1In = new short[]{1, 2, 3};
     ShortArray m1 = ShortArray(m1In);
-    Setup sc1 = jadd(SetupConfig(ck), jset(k1, m1));
+    Setup sc1 = jadd(JItems.Setup(info, ck), jset(k1, m1));
     // Just checking to see if adding second works
     sc1 = jadd(sc1, jset(k2, m1));
     assertTrue(sc1.size() == 2);
@@ -428,7 +398,7 @@ public class JJSONTests {
     LongMatrixKey k1 = LongMatrixKey("myMatrix");
     long[][] m1In = new long[][ ]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     LongMatrix m1 = LongMatrix(m1In);
-    Setup sc1 = SetupConfig(ck).add(jset(k1, m1));
+    Setup sc1 = JItems.Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data()[2], m1In[2]);
@@ -448,7 +418,7 @@ public class JJSONTests {
     LongArrayKey k1 = LongArrayKey("myArray");
     long[] m1In = new long[]{1, 2, 3};
     LongArray m1 = LongArray(m1In);
-    Setup sc1 = SetupConfig(ck).add(jset(k1, m1));
+    Setup sc1 = JItems.Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);

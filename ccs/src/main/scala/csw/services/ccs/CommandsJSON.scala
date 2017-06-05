@@ -34,32 +34,32 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private val messageKey = "message"
   private val reasonKey = "reason"
   private val resultKey = "result"
-//  private val statusKey = "status"
-//  private val runIdKey = "runId"
-//  private val configKey = "config"
-//  private val overallKey = "overall"
-//  private val resultsKey = "results"
+  //  private val statusKey = "status"
+  //  private val runIdKey = "runId"
+  //  private val configKey = "config"
+  //  private val overallKey = "overall"
+  //  private val resultsKey = "results"
 
   private def vtoObj(issueType: String, reason: String) = JsObject(issueKey -> JsString(issueType), reasonKey -> JsString(reason))
 
   private def issueToType(obj: ValidationIssue) = obj match {
-    case i: Validation.MissingKeyIssue                   => missingKeyIssueType
-    case i: Validation.WrongConfigKeyIssue               => wrongConfigKeyIssueType
-    case i: Validation.WrongItemTypeIssue                => wrongItemTypeIssueType
-    case i: Validation.WrongUnitsIssue                   => wrongUnitsIssueType
-    case i: Validation.WrongNumberOfItemsIssue           => wrongNumberOfItemsIssueType
-    case i: Validation.SingleConfigOnlyIssue             => singleConfigOnlyIssueType
-    case i: Validation.AssemblyBusyIssue                 => assemblyBusyIssueType
-    case i: Validation.UnresolvedLocationsIssue          => unresolvedLocationsIssueType
-    case i: Validation.ItemValueOutOfRangeIssue          => itemValueOutOfRangeIssueType
-    case i: Validation.WrongInternalStateIssue           => wrongInternalStateIssueType
-    case i: Validation.UnsupportedCommandInStateIssue    => unsupportedCommandInStateIssueType
-    case i: Validation.UnsupportedCommandIssue           => unsupportedCommandIssueType
-    case i: Validation.RequiredServiceUnavailableIssue   => requiredServiceUnavailableIssueType
-    case i: Validation.RequiredHCDUnavailableIssue       => requiredHCDUnavailableIssueType
-    case i: Validation.RequiredAssemblyUnavailableIssue  => requiredAssemblyUnavailableIssueType
-    case i: Validation.RequiredSequencerUnavailableIssue => requiredSequencerUnavailableIssueType
-    case i: Validation.OtherIssue                        => otherIssueType
+    case _: Validation.MissingKeyIssue                   => missingKeyIssueType
+    case _: Validation.WrongConfigKeyIssue               => wrongConfigKeyIssueType
+    case _: Validation.WrongItemTypeIssue                => wrongItemTypeIssueType
+    case _: Validation.WrongUnitsIssue                   => wrongUnitsIssueType
+    case _: Validation.WrongNumberOfItemsIssue           => wrongNumberOfItemsIssueType
+    case _: Validation.SingleConfigOnlyIssue             => singleConfigOnlyIssueType
+    case _: Validation.AssemblyBusyIssue                 => assemblyBusyIssueType
+    case _: Validation.UnresolvedLocationsIssue          => unresolvedLocationsIssueType
+    case _: Validation.ItemValueOutOfRangeIssue          => itemValueOutOfRangeIssueType
+    case _: Validation.WrongInternalStateIssue           => wrongInternalStateIssueType
+    case _: Validation.UnsupportedCommandInStateIssue    => unsupportedCommandInStateIssueType
+    case _: Validation.UnsupportedCommandIssue           => unsupportedCommandIssueType
+    case _: Validation.RequiredServiceUnavailableIssue   => requiredServiceUnavailableIssueType
+    case _: Validation.RequiredHCDUnavailableIssue       => requiredHCDUnavailableIssueType
+    case _: Validation.RequiredAssemblyUnavailableIssue  => requiredAssemblyUnavailableIssueType
+    case _: Validation.RequiredSequencerUnavailableIssue => requiredSequencerUnavailableIssueType
+    case _: Validation.OtherIssue                        => otherIssueType
   }
 
   implicit def validationIssueJsonFormat: JsonFormat[ValidationIssue] = new JsonFormat[ValidationIssue] {
@@ -97,7 +97,6 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private val acceptedCSType = CommandStatus.Accepted.toString
   private val noLongerValidCSType = classOf[CommandStatus.NoLongerValid].getSimpleName
   private val completedCSType = CommandStatus.Completed.toString
-//  private val completedWithResultCSType = classOf[CompletedWithResult].getSimpleName
   private val inProgressCSType = classOf[CommandStatus.InProgress].getSimpleName
   private val errorCSType = classOf[CommandStatus.Error].getSimpleName
   private val abortedCSType = CommandStatus.Aborted.toString
@@ -129,29 +128,29 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
     override def read(json: JsValue): CommandResponse = {
       json.asJsObject.getFields(statusTypeKey) match {
         case Seq(JsString(statusType)) => statusType match {
-          case `invalidCSType`             => CommandStatus.Invalid(json.convertTo[ValidationIssue])
-          case `acceptedCSType`               => CommandStatus.Accepted
-          case `noLongerValidCSType`       => CommandStatus.NoLongerValid(json.convertTo[ValidationIssue])
-          case `completedCSType`           => CommandStatus.Completed
-          case `inProgressCSType`          => CommandStatus.InProgress(getMessage(json))
-          case `errorCSType`               => CommandStatus.Error(getMessage(json))
-//          case `completedWithResultCSType` => CompletedWithResult(getConfig(json))
-          case `abortedCSType`             => CommandStatus.Aborted
-          case `cancelledCSType`           => CommandStatus.Cancelled
+          case `invalidCSType`       => CommandStatus.Invalid(json.convertTo[ValidationIssue])
+          case `acceptedCSType`      => CommandStatus.Accepted
+          case `noLongerValidCSType` => CommandStatus.NoLongerValid(json.convertTo[ValidationIssue])
+          case `completedCSType`     => CommandStatus.Completed
+          case `inProgressCSType`    => CommandStatus.InProgress(getMessage(json))
+          case `errorCSType`         => CommandStatus.Error(getMessage(json))
+          //          case `completedWithResultCSType` => CompletedWithResult(getConfig(json))
+          case `abortedCSType`       => CommandStatus.Aborted
+          case `cancelledCSType`     => CommandStatus.Cancelled
         }
       }
     }
 
     override def write(obj: CommandResponse): JsValue = obj match {
-      case CommandStatus.Invalid(vi)                 => csWithIssue(invalidCSType, vi)
-      case CommandStatus.Accepted                    => csOnly(acceptedCSType)
-      case CommandStatus.NoLongerValid(vi)           => csWithIssue(noLongerValidCSType, vi)
-      case CommandStatus.Completed                   => csOnly(completedCSType)
-      case CommandStatus.InProgress(message)         => csWithMessage(inProgressCSType, message)
-      case CommandStatus.Error(message)              => csWithMessage(errorCSType, message)
-//      case CommandStatus.CompletedWithResult(result) => csWithConfig(completedWithResultCSType, result)
-      case CommandStatus.Aborted                     => csOnly(abortedCSType)
-      case CommandStatus.Cancelled                   => csOnly(cancelledCSType)
+      case CommandStatus.Invalid(vi)         => csWithIssue(invalidCSType, vi)
+      case CommandStatus.Accepted            => csOnly(acceptedCSType)
+      case CommandStatus.NoLongerValid(vi)   => csWithIssue(noLongerValidCSType, vi)
+      case CommandStatus.Completed           => csOnly(completedCSType)
+      case CommandStatus.InProgress(message) => csWithMessage(inProgressCSType, message)
+      case CommandStatus.Error(message)      => csWithMessage(errorCSType, message)
+      //      case CommandStatus.CompletedWithResult(result) => csWithConfig(completedWithResultCSType, result)
+      case CommandStatus.Aborted             => csOnly(abortedCSType)
+      case CommandStatus.Cancelled           => csOnly(cancelledCSType)
     }
   }
 

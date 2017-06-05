@@ -2,11 +2,10 @@ package javacsw.services.ccs;
 
 import akka.actor.ActorRef;
 import csw.services.ccs.Validation;
-import csw.util.itemSet.ItemSets;
+import csw.util.itemSet.ItemSets.Setup;
+import csw.util.itemSet.ItemSets.Observe;
 import javacsw.services.pkg.AbstractAssemblyController;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -15,14 +14,10 @@ import java.util.Optional;
 @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public abstract class JAssemblyController extends AbstractAssemblyController {
   @Override
-  public List<Validation.Validation> setup(ItemSets.SetupConfigArg configArg, Optional<ActorRef> replyTo) {
-    return Collections.emptyList();
-  }
+  public abstract Validation.Validation setup(Setup s, Optional<ActorRef> replyTo);
 
   @Override
-  public List<Validation.Validation> observe(ItemSets.ObserveConfigArg configArg, Optional<ActorRef> replyTo) {
-    return Collections.emptyList();
-  }
+  public abstract Validation.Validation observe(Observe o, Optional<ActorRef> replyTo);
 
   public JAssemblyController(AssemblyInfo info) {
     super(info);

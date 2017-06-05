@@ -24,7 +24,6 @@ class SerializationTests extends FunSuite {
   val epoch = DoubleKey("epoch")
   val test = IntKey("test")
 
-
   val sc1 = Setup(itemSetInfo, "tcs.pos").madd(
     ra.set("12:32:11"),
     dec.set("30:22:22"),

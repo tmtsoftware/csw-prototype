@@ -30,9 +30,11 @@ public class JItemSetDslTests {
   private static final IntKey k2 = IntKey("windspeed");
   private static final DoubleMatrixKey k4 = DoubleMatrixKey("matrixTest");
 
+  private static final ItemSets.ItemSetInfo info = new ItemSets.ItemSetInfo(new ObsId("Obs001"));
+
   @Test
   public void testSetupConfig() {
-    Setup sc1 = jadd(sc(ck3), jset(k1, 22), jset(k2, 44));
+    Setup sc1 = jadd(sc(info, ck3), jset(k1, 22), jset(k2, 44));
     assertTrue(sc1.size() == 2);
     assertTrue(sc1.exists(k1));
     assertTrue(sc1.exists(k2));
@@ -44,7 +46,7 @@ public class JItemSetDslTests {
   public void testSetupConfigWithMatrix() {
     double[][] m1 = {{1., 2., 3.}, {4., 5., 6.}, {7., 8., 9.}};
     DoubleMatrix dm1 = DoubleMatrix(m1);
-    Setup sc1 = jadd(sc(ck3), jset(k4, dm1));
+    Setup sc1 = jadd(sc(info, ck3), jset(k4, dm1));
     assertTrue(sc1.size() == 1);
     assertTrue(sc1.exists(k4));
     assertEquals(jvalue(jitem(sc1, k4)), dm1);
@@ -54,7 +56,7 @@ public class JItemSetDslTests {
 
   @Test
   public void testObserveConfig() {
-    Observe oc1 = jadd(oc(ck3), jset(k1, 22), jset(k2, 44));
+    Observe oc1 = jadd(oc(info, ck3), jset(k1, 22), jset(k2, 44));
     assertTrue(oc1.size() == 2);
     assertTrue(oc1.exists(k1));
     assertTrue(oc1.exists(k2));

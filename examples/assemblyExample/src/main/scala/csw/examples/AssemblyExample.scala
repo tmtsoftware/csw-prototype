@@ -2,7 +2,7 @@ package csw.examples
 
 import akka.actor.ActorRef
 import csw.services.ccs.Validation._
-import csw.services.ccs.{AssemblyController, HcdController, Validation}
+import csw.services.ccs.{AssemblyController, HcdController}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedAkkaLocation
@@ -10,7 +10,7 @@ import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor.{Initialized, Running}
 import csw.services.pkg.{Assembly, Supervisor}
-import csw.util.itemSet.ItemSets.{Setup, SetupConfigArg}
+import csw.util.itemSet.ItemSets.Setup
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -48,32 +48,26 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
   /**
    * Validates a received config arg
    */
-  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
-    // Checks a single setup config
-    def validateConfig(sc: Setup): Validation = {
-      if (sc.itemSetKey.prefix != HCDExample.prefix) {
-        Invalid(WrongConfigKeyIssue("Wrong prefix"))
-      } else {
-        val missing = sc.missingKeys(HCDExample.rateKey)
-        if (missing.nonEmpty)
-          Invalid(MissingKeyIssue(s"Missing keys: ${missing.mkString(", ")}"))
-        else Valid
-      }
+  private def validateSequenceConfigArg(s: Setup): Validation = {
+    if (s.itemSetKey.prefix != HCDExample.prefix) {
+      Invalid(WrongConfigKeyIssue("Wrong prefix"))
+    } else {
+      val missing = s.missingKeys(HCDExample.rateKey)
+      if (missing.nonEmpty)
+        Invalid(MissingKeyIssue(s"Missing keys: ${missing.mkString(", ")}"))
+      else Valid
     }
-
-    sca.configs.map(validateConfig).toList
   }
 
-  override def setup(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ValidationList = {
+  override def setup(s: Setup, commandOriginator: Option[ActorRef]): Validation = {
     // Returns validations for all
-    val validations: ValidationList = validateSequenceConfigArg(sca)
-    if (Validation.isAllValid(validations)) {
+    val validation = validateSequenceConfigArg(s)
+    if (validation == Valid) {
       // For this trivial test we just forward the configs to the HCD
-      sca.configs.foreach(hcd ! HcdController.Submit(_))
+      hcd ! HcdController.Submit(s)
     }
-    validations
+    validation
   }
-
 }
 
 /**

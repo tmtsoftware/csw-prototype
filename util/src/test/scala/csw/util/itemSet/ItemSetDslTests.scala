@@ -12,10 +12,10 @@ class ItemSetDslTests extends FunSpec with Matchers {
   private val s1: String = "encoder"
   private val s2: String = "filter"
   private val s3: String = "detectorTemp"
-//  private val ck: String = "wfos.blue.filter"
+  //  private val ck: String = "wfos.blue.filter"
   private val ck1: String = "wfos.prog.cloudcover"
   private val ck2: String = "wfos.red.filter"
-//  private val ck3: String = "wfos.red.detector"
+  //  private val ck3: String = "wfos.red.detector"
   private val itemSetInfo = ItemSetInfo(ObsId("Obs001"))
 
   describe("creating items") {
@@ -353,8 +353,8 @@ class ItemSetDslTests extends FunSpec with Matchers {
   describe("sc tests") {
     val k1 = IntKey("itest")
     val k2 = DoubleKey("dtest")
-//    val k3 = StringKey("stest")
-//    val k4 = LongArrayKey("lartest")
+    //    val k3 = StringKey("stest")
+    //    val k4 = LongArrayKey("lartest")
 
     val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.degrees)
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)

@@ -25,7 +25,7 @@ public class JCommandStatus {
   /**
    * The configuration or set of configurations was valid and started
    */
-  public static final CommandStatus.CommandResponse Valid = CommandStatus.Valid$.MODULE$;
+  public static final CommandStatus.CommandResponse Accepted = CommandStatus.Accepted$.MODULE$;
 
 
   /**
@@ -44,24 +44,4 @@ public class JCommandStatus {
    * Cancelled means the command/actions were stopped at the next convenient place. This is usually appropriate for
    */
   public static final CommandStatus.CommandResponse Cancelled = CommandStatus.Cancelled$.MODULE$;
-
-  /**
-   * A multi-config arg has been accepted for all parts
-   */
-  public static final CommandStatus.OverallCommandStatus Accepted = CommandStatus.Accepted$.MODULE$;
-
-  /**
-   * A multi-config arg has failed validiation for one or more reasons
-   */
-  public static final CommandStatus.OverallCommandStatus NotAccepted = CommandStatus.NotAccepted$.MODULE$;
-
-  /**
-   * If a multi-config arg has not completed all parts, overall is set to Incomplete
-   */
-  public static final CommandStatus.OverallCommandStatus Incomplete = CommandStatus.Incomplete$.MODULE$;
-
-  /**
-   * All parts of a multi-config arg have completed successfully
-   */
-  public static final CommandStatus.OverallCommandStatus AllCompleted = CommandStatus.AllCompleted$.MODULE$;
 }

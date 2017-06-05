@@ -5,13 +5,12 @@ import java.util.Optional
 import akka.actor.{AbstractActor, ActorRef}
 import csw.services.ccs.AssemblyController
 import csw.services.pkg.Assembly
-import csw.util.itemSet.ItemSets.{ObserveConfigArg, SetupConfigArg}
+import csw.util.itemSet.ItemSets.{Observe, Setup}
 import csw.util.itemSet.StateVariable.CurrentStates
 import csw.services.ccs.Validation.Validation
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.akka.PublisherActor
 
-import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 
 /**
@@ -27,28 +26,28 @@ abstract class AbstractAssemblyController(override val info: AssemblyInfo) exten
   def defaultReceive: Receive = controllerReceive
 
   // Convert types for Java API
-  override protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): List[Validation] = setup(configArg, replyTo.asJava).asScala.toList
+  override protected def setup(s: Setup, replyTo: Option[ActorRef]): Validation = setup(s, replyTo.asJava)
 
   /**
    * Called to process the setup config and reply to the given actor with the command status.
    *
-   * @param configArg contains a list of setup configurations
+   * @param s setup configuration
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  def setup(configArg: SetupConfigArg, replyTo: Optional[ActorRef]): java.util.List[Validation] = List.empty[Validation].asJava
+  def setup(s: Setup, replyTo: Optional[ActorRef]): Validation
 
   // Convert types for Java API
-  override protected def observe(configArg: ObserveConfigArg, replyTo: Option[ActorRef]): List[Validation] = observe(configArg, replyTo.asJava).asScala.toList
+  override protected def observe(o: Observe, replyTo: Option[ActorRef]): Validation = observe(o, replyTo.asJava)
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.
    *
-   * @param configArg contains a list of observe configurations
+   * @param o observe configuration
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  def observe(configArg: ObserveConfigArg, replyTo: Optional[ActorRef]): java.util.List[Validation] = List.empty[Validation].asJava
+  def observe(o: Observe, replyTo: Optional[ActorRef]): Validation
 }
 
 /**

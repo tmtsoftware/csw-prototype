@@ -964,20 +964,20 @@ public class JItems {
 
   // ---------------- Configuration level
 
-  public static Setup SetupConfig(String name) {
-    return new Setup(name);
+  public static Setup Setup(ItemSetInfo info, String name) {
+    return new Setup(info, name);
   }
 
-  public static Setup SetupConfig(ItemSetKey key) {
-    return new Setup(key, new scala.collection.immutable.HashSet<>());
+  public static Setup Setup(ItemSetInfo info, ItemSetKey key) {
+    return new Setup(info, key, new scala.collection.immutable.HashSet<>());
   }
 
-  public static Observe ObserveConfig(String name) {
-    return new Observe(name);
+  public static Observe Observe(ItemSetInfo info, String name) {
+    return new Observe(info, name);
   }
 
-  public static Wait WaitConfig(String name) {
-    return new Wait(name);
+  public static Wait Wait(ItemSetInfo info, String name) {
+    return new Wait(info, name);
   }
 
   public static StatusEvent StatusEvent(String name) {

@@ -1,8 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import csw.services.ccs.{AssemblyController, HcdController, HcdStatusMatcherActor, SequentialExecutor}
-import csw.services.ccs.SequentialExecutor.ExecuteOne
+import csw.services.ccs.{AssemblyController, HcdController, HcdStatusMatcherActor}
 import csw.services.ccs.Validation._
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.ResolvedAkkaLocation
@@ -12,7 +11,7 @@ import csw.services.pkg.Supervisor._
 import csw.util.akka.PublisherActor
 import csw.util.akka.PublisherActor.Subscribe
 import csw.util.itemSet.StateVariable._
-import csw.util.itemSet.ItemSets.{Setup, SetupConfigArg}
+import csw.util.itemSet.ItemSets.Setup
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix

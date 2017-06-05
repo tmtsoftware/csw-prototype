@@ -12,21 +12,23 @@ import static javacsw.util.itemSet.JItems.*;
  */
 public class JConfigDSL {
     /**
-     * Returns a new SetupConfig
-     * @param configKey identifies the target subsystem
+     * Returns a new Setup
+     * @param info information associated with the setup
+     * @param itemSetKey identifies the target subsystem
      * @param items one or more items (keys with values and units)
      */
-    public static Setup sc(String configKey, Item<?>... items) {
-        return jadd((new Setup(configKey)), items);
+    public static Setup sc(ItemSetInfo info, String itemSetKey, Item<?>... items) {
+        return jadd((new Setup(info, itemSetKey)), items);
     }
 
     /**
-     * Returns a new ObserveConfig
-     * @param configKey identifies the target subsystem
+     * Returns a new Observe
+     * @param info information associated with the setup
+     * @param itemSetKey identifies the target subsystem
      * @param items one or more items (keys with values and units)
      */
-    public static Observe oc(String configKey, Item<?>... items) {
-        return jadd((new Observe(configKey)), items);
+    public static Observe oc(ItemSetInfo info, String itemSetKey, Item<?>... items) {
+        return jadd((new Observe(info, itemSetKey)), items);
     }
 
     /**

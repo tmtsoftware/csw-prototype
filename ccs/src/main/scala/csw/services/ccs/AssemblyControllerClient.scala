@@ -10,17 +10,17 @@ import csw.util.itemSet.ItemSets.Setup
 import scala.concurrent.{Await, Future}
 
 /**
-  * A client API for assemblies that hides the actor API.
-  *
-  * @param assemblyController the actor for the target assembly
-  * @param timeout amount of time to wait for a command to complete before reporting an error
-  */
+ * A client API for assemblies that hides the actor API.
+ *
+ * @param assemblyController the actor for the target assembly
+ * @param timeout amount of time to wait for a command to complete before reporting an error
+ */
 case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   /**
-    * Submits the given config to the assembly and returns the future result
-    * (Note: This assumes that the assembly will return a CommandResult for the given config)
-    */
+   * Submits the given config to the assembly and returns the future result
+   * (Note: This assumes that the assembly will return a CommandResult for the given config)
+   */
   def submit(config: Setup): Future[CommandResponse] = {
     val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
     (wrapper ? Submit(config)).mapTo[CommandResponse]
@@ -30,10 +30,10 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
 // --
 
 /**
-  * A synchronous, blocking client API for assemblies that hides the actor API.
-  *
-  * @param client a client for the target assembly
-  */
+ * A synchronous, blocking client API for assemblies that hides the actor API.
+ *
+ * @param client a client for the target assembly
+ */
 case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   def submit(config: Setup): CommandResponse = {
@@ -49,9 +49,9 @@ private object AssemblyWrapper {
 }
 
 /**
-  * A simple wrapper to get a single response from an assembly for a single submit
-  * @param assembly the target assembly actor
-  */
+ * A simple wrapper to get a single response from an assembly for a single submit
+ * @param assembly the target assembly actor
+ */
 private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
@@ -68,7 +68,7 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
       cr match {
         case Accepted =>
           context.become(waitingForResult(replyTo))
-        case Invalid(_)=>
+        case Invalid(_) =>
           replyTo ! cr
       }
 

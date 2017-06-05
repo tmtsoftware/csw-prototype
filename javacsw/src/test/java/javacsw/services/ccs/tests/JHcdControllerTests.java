@@ -87,9 +87,9 @@ public class JHcdControllerTests {
 
         // Message sent when simulated work is done
         static class WorkDone {
-            SetupConfig config;
+            Setup config;
 
-            WorkDone(SetupConfig config) {
+            WorkDone(Setup config) {
                 this.config = config;
             }
         }
@@ -100,7 +100,7 @@ public class JHcdControllerTests {
 
         public TestWorker() {
             receive(ReceiveBuilder.
-                    match(SetupConfig.class, this::handleSetupConfig).
+                    match(Setup.class, this::handleSetupConfig).
                     match(RequestCurrentState.class, rcs -> handleRequestCurrentState()).
                     match(WorkDone.class, wd -> handleWorkDone(wd.config)).
                     matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -108,7 +108,7 @@ public class JHcdControllerTests {
         }
 
         // Simulate doing work
-        private void handleSetupConfig(SetupConfig config) {
+        private void handleSetupConfig(Setup config) {
             log.debug("Start processing " + config);
             FiniteDuration d = FiniteDuration.create(2, TimeUnit.SECONDS);
             getContext().system().scheduler().scheduleOnce(d, self(), new WorkDone(config), system.dispatcher(), null);
@@ -119,7 +119,7 @@ public class JHcdControllerTests {
             getContext().parent().tell(currentState, self());
         }
 
-        private void handleWorkDone(SetupConfig config) {
+        private void handleWorkDone(Setup config) {
             log.debug("Done processing " + config);
             currentState = new CurrentState(config);
             getContext().parent().tell(currentState, self());
@@ -141,7 +141,7 @@ public class JHcdControllerTests {
                 LoggingAdapter log = Logging.getLogger(system, this);
                 ActorRef hcdController = system.actorOf(TestHcdController.props());
                 // Send a setup config to the HCD
-                SetupConfig config = new SetupConfig(testPrefix2).jset(position, "IR3");
+                Setup config = new Setup(testPrefix2).jset(position, "IR3");
                 hcdController.tell(new Submit(config), getRef());
                 DemandState demand = new DemandState(config);
 

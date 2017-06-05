@@ -99,8 +99,9 @@ object ItemSetJson extends DefaultJsonProtocol {
   }
 
   implicit val itemSetKeyFormat = jsonFormat2(ItemSetKey.apply)
-  implicit val itemSetInfoFormat = jsonFormat1(ItemSetInfo.strToItemSetInfo)
   implicit val obsIdFormat = jsonFormat1(ObsId.apply)
+  implicit val runIdFormat = jsonFormat1(RunId.apply)
+  implicit val itemSetInfoFormat = jsonFormat1(ItemSetInfo.apply)
   implicit val eventInfoFormat = jsonFormat4(EventInfo.apply)
 
   // JSON type tags
@@ -238,7 +239,7 @@ object ItemSetJson extends DefaultJsonProtocol {
               case `setupType`   => Setup(info, ck, itemsFormat.read(items)).asInstanceOf[A]
               case `observeType` => Observe(info, ck, itemsFormat.read(items)).asInstanceOf[A]
               case `waitType`    => Wait(info, ck, itemsFormat.read(items)).asInstanceOf[A]
-              case _                   => unexpectedJsValueError(json)
+              case _             => unexpectedJsValueError(json)
             }
           case _ => unexpectedJsValueError(json)
         }
@@ -274,9 +275,9 @@ object ItemSetJson extends DefaultJsonProtocol {
           case (JsString(typeName), itemSetKey, items) =>
             val ck = itemSetKey.convertTo[ItemSetKey]
             typeName match {
-              case `curentStateType`   => CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `demandStateType`   => DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case _                   => unexpectedJsValueError(json)
+              case `curentStateType` => CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `demandStateType` => DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case _                 => unexpectedJsValueError(json)
             }
           case _ => unexpectedJsValueError(json)
         }

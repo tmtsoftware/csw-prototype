@@ -6,8 +6,8 @@ import org.scalatest.FunSpec
 import spray.json.DefaultJsonProtocol
 
 /**
-  * Created by gillies on 5/25/17.
-  */
+ * Created by gillies on 5/25/17.
+ */
 //noinspection TypeAnnotation
 object ItemSetTests {
 
@@ -58,7 +58,6 @@ class ItemSetTests extends FunSpec {
     assert(sc1.prefix == ck1)
     println(s"configkey: ${sc1.itemSetKey}")
     println(s"runId: + ${sc1.info.runId}")
-
 
   }
 

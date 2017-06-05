@@ -70,7 +70,7 @@ object AssemblyControllerTests {
 
     // Simulate getting the initial state from the device
 
-//    private val initialState = CurrentState(testPrefix1).add(position.set("None"))
+    //    private val initialState = CurrentState(testPrefix1).add(position.set("None"))
 
     def receive: Receive = {
       case Work(config, replyTo) =>
@@ -95,10 +95,9 @@ object AssemblyControllerTests {
 // Test requires that Redis is running externally
 //@DoNotDiscover
 class AssemblyControllerTests extends TestKit(AssemblyControllerTests.system)
-  with ImplicitSender with FunSuiteLike with LazyLogging {
+    with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import AssemblyControllerTests._
-
 
   test("Test Assembly controller") {
     val assemblyController = system.actorOf(TestAssemblyController.props())

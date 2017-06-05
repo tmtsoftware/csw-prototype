@@ -18,7 +18,7 @@ object AssemblyController {
    * When the work for the config has been completed, a Completed message is sent
    * (or an Error message, if an error occurred).
    *
-    * @param itemset the configuration to execute
+   * @param itemset the configuration to execute
    */
   case class Submit(itemset: ControlItemSet) extends AssemblyControllerMessage
 
@@ -28,7 +28,7 @@ object AssemblyController {
    * indicating that config is valid (or invalid).
    * There will be no messages on completion.
    *
-    * @param itemset the configuration to execute
+   * @param itemset the configuration to execute
    */
   case class OneWay(itemset: ControlItemSet) extends AssemblyControllerMessage
 
@@ -48,13 +48,13 @@ trait AssemblyController {
   protected def controllerReceive: Receive = {
     case Submit(controlItemSet) =>
       controlItemSet match {
-        case si: Setup => setupSubmit(si, oneway = false, sender())
+        case si: Setup   => setupSubmit(si, oneway = false, sender())
         case oi: Observe => observeSubmit(oi, oneway = false, sender())
       }
 
     case OneWay(controlItemSet) =>
       controlItemSet match {
-        case sca: Setup => setupSubmit(sca, oneway = true, sender())
+        case sca: Setup   => setupSubmit(sca, oneway = true, sender())
         case oca: Observe => observeSubmit(oca, oneway = true, sender())
       }
   }
