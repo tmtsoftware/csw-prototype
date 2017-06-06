@@ -3,6 +3,7 @@ package javacsw.util.itemSet.tests;
 import csw.util.itemSet.*;
 import csw.util.itemSet.ItemSets.Observe;
 import csw.util.itemSet.ItemSets.Setup;
+import csw.util.itemSet.ItemSets.ItemSetInfo;
 import org.junit.Test;
 
 import java.util.*;
@@ -30,7 +31,7 @@ public class JItemSetDslTests {
   private static final IntKey k2 = IntKey("windspeed");
   private static final DoubleMatrixKey k4 = DoubleMatrixKey("matrixTest");
 
-  private static final ItemSets.ItemSetInfo info = new ItemSets.ItemSetInfo(new ObsId("Obs001"));
+  private static final ItemSets.ItemSetInfo info = new ItemSetInfo("Obs001");
 
   @Test
   public void testSetupConfig() {

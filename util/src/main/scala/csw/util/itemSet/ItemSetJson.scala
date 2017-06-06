@@ -100,8 +100,6 @@ object ItemSetJson extends DefaultJsonProtocol {
 
   implicit val itemSetKeyFormat = jsonFormat2(ItemSetKey.apply)
   implicit val obsIdFormat = jsonFormat1(ObsId.apply)
-  implicit val runIdFormat = jsonFormat1(RunId.apply)
-  implicit val itemSetInfoFormat = jsonFormat1(ItemSetInfo.apply)
   implicit val eventInfoFormat = jsonFormat4(EventInfo.apply)
 
   // JSON type tags
@@ -204,6 +202,21 @@ object ItemSetJson extends DefaultJsonProtocol {
         case _ => unexpectedJsValueError(json)
       }
     case _ => unexpectedJsValueError(json)
+  }
+
+  /**
+   * Handles conversion of ItemSetInfo to/from JSON
+   */
+  implicit def itemSetInfoFormat: RootJsonFormat[ItemSetInfo] = new RootJsonFormat[ItemSetInfo] {
+    override def read(json: JsValue): ItemSetInfo = json.asJsObject.getFields("obsId", "runId") match {
+      case Seq(JsString(obsId), JsString(runId)) =>
+        ItemSetInfo(ObsId(obsId), RunId(runId))
+    }
+
+    override def write(obj: ItemSetInfo): JsValue = JsObject(
+      "obsId" -> JsString(obj.obsId.obsId),
+      "runId" -> JsString(obj.runId.id)
+    )
   }
 
   /**

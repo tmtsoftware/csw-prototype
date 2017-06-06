@@ -68,8 +68,8 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
       cr match {
         case Accepted =>
           context.become(waitingForResult(replyTo))
-        case Invalid(_) =>
-          replyTo ! cr
+        case x =>
+          replyTo ! x
       }
 
     case _ =>

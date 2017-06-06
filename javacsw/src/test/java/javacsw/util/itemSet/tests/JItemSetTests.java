@@ -28,7 +28,7 @@ public class JItemSetTests {
   private static final String ck2 = "wfos.red.filter";
   private static final String ck3 = "wfos.red.detector";
 
-  private static final ItemSetInfo info = new ItemSetInfo(new ObsId("Obs001"));
+  private static final ItemSets.ItemSetInfo info = new ItemSetInfo("Obs001");
 
   // @SuppressWarnings("EqualsBetweenInconvertibleTypes")
 

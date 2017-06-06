@@ -266,12 +266,16 @@ object ItemSets {
   /**
    * This will include information related to the observation that is tied to an itemSet
    * This will grow and develop.
+   *
+   * @param obsId the observation id
+   * @param runId unique ID for this itemSet
    */
-  case class ItemSetInfo(obsId: ObsId) {
+  case class ItemSetInfo(obsId: ObsId, runId: RunId = RunId()) {
+
     /**
-     * Unique ID for this itemSet
+     * Creates an instance with the given obsId and a unique runId
      */
-    val runId: RunId = RunId()
+    def this(obsId: String) = this(ObsId(obsId))
   }
 
   object ItemSetInfo {

@@ -3,6 +3,7 @@ package javacsw.util.itemSet.tests;
 import csw.util.itemSet.*;
 import csw.util.itemSet.ItemSets.Observe;
 import csw.util.itemSet.ItemSets.Setup;
+import csw.util.itemSet.ItemSets.ItemSetInfo;
 import csw.util.itemSet.Events.ObserveEvent;
 import csw.util.itemSet.Events.StatusEvent;
 import csw.util.itemSet.Events.SystemEvent;
@@ -31,7 +32,7 @@ public class JJSONTests {
   private static final String ck2 = "wfos.red.filter";
   private static final String ck3 = "wfos.red.detector";
 
-  private static final ItemSets.ItemSetInfo info = new ItemSets.ItemSetInfo(new ObsId("Obs001"));
+  private static final ItemSets.ItemSetInfo info = new ItemSetInfo("Obs001");
 
 
   @Test
