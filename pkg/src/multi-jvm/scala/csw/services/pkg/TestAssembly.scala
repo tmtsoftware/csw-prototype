@@ -10,8 +10,8 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.Supervisor._
 import csw.util.akka.PublisherActor
 import csw.util.akka.PublisherActor.Subscribe
-import csw.util.itemSet.StateVariable._
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.StateVariable._
+import csw.util.param.Parameters.Setup
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
@@ -69,7 +69,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   // Current state received from one of the HCDs: Send it, together with the other states,
   // to the subscribers.
   private def updateCurrentState(s: CurrentState): Unit = {
-    stateMap += s.prefix -> s
+    stateMap += s.prefixStr -> s
     requestCurrent()
   }
 
@@ -83,7 +83,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   override def setup(s: Setup, commandOriginator: Option[ActorRef]): Validation = {
     val validation = validateSetupConfig(s)
     if (validation == Valid) {
-      for (hcdActorRef <- getActorRefs(s.prefix)) {
+      for (hcdActorRef <- getActorRefs(s.prefixStr)) {
         // Submit to the HCD
         hcdActorRef ! HcdController.Submit(s)
         // If a commandOriginator was given, start a matcher actor that will reply with the command status

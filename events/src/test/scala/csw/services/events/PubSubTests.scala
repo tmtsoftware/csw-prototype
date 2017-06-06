@@ -6,8 +6,8 @@ import akka.util.Timeout
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.LocationService
-import csw.util.itemSet.DoubleKey
-import csw.util.itemSet.Events.SystemEvent
+import csw.util.param.DoubleKey
+import csw.util.param.Events.SystemEvent
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

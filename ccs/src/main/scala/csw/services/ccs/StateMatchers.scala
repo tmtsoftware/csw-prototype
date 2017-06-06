@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.util.Timeout
 import csw.util.akka.PublisherActor.{Subscribe, Unsubscribe}
-import csw.util.itemSet.StateVariable.{CurrentState, DemandState}
+import csw.util.param.StateVariable.{CurrentState, DemandState}
 
 import scala.annotation.varargs
 import scala.concurrent.duration._
@@ -25,7 +25,7 @@ trait StateMatcher {
  * @param demand a DemandState that will be tested for equality with each CurrentState
  */
 case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
-  def prefix = demand.prefix
+  def prefix = demand.prefixStr
 
   def check(current: CurrentState): Boolean = demand.items.equals(current.items)
 }
@@ -41,13 +41,13 @@ case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
  */
 case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extends StateMatcher {
 
-  import csw.util.itemSet.Item
+  import csw.util.param.Parameter
 
-  def prefix = demand.prefix
+  def prefix = demand.prefixStr
 
   def check(current: CurrentState): Boolean = {
     demand.items.forall { di =>
-      val foundItem: Option[Item[_]] = current.find(di)
+      val foundItem: Option[Parameter[_]] = current.find(di)
       foundItem.fold(false)(if (withUnits) _.equals(di) else _.values.equals(di.values))
     }
   }
@@ -95,7 +95,7 @@ class SingleStateMatcherActor(currentStateReceiver: ActorRef, timeout: Timeout) 
   def executing(matcher: StateMatcher, mysender: ActorRef, timer: Cancellable): Receive = {
     case current: CurrentState =>
       log.debug(s"received current state: $current")
-      if (matcher.prefix == current.prefix && matcher.check(current)) {
+      if (matcher.prefix == current.prefixStr && matcher.check(current)) {
         timer.cancel()
         mysender ! CommandStatus.Completed
         currentStateReceiver ! Unsubscribe
@@ -165,7 +165,7 @@ class MultiStateMatcherActor(stateSource: ActorRef, timeout: Timeout) extends Ac
     case current: CurrentState =>
       log.debug(s"received current state: $current")
       // filter the matchers first on prefix and then on check function to get only matchers that succeed
-      val matched = matchers.filter(_.prefix == current.prefix).filter(_.check(current))
+      val matched = matchers.filter(_.prefix == current.prefixStr).filter(_.check(current))
       if (matched.nonEmpty) {
         log.debug("MultiStateMatcherActor matched")
         // Note that this accomodates the case when more than one matcher match on the same prefix!
@@ -224,7 +224,7 @@ class MultiStateMatcherActor2(stateSource: ActorRef) extends Actor with ActorLog
     case current: CurrentState =>
       log.debug(s"received current state: $current")
       // filter the matchers first on prefix and then on check function to get only matchers that succeed
-      val matched = matchers.filter(_.prefix == current.prefix).filter(_.check(current))
+      val matched = matchers.filter(_.prefix == current.prefixStr).filter(_.check(current))
       if (matched.nonEmpty) {
         log.debug("MultiStateMatcherActor2 matched")
         // Note that this accomodates the case when more than one matcher match on the same prefix!

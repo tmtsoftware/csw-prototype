@@ -5,8 +5,8 @@ import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.LocationService
-import csw.util.itemSet.Events.SystemEvent
-import csw.util.itemSet._
+import csw.util.param.Events.SystemEvent
+import csw.util.param._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.Await

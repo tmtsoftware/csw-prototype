@@ -5,8 +5,8 @@ import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Hcd
 import csw.util.akka.PublisherActor
-import csw.util.itemSet.ItemSets.Setup
-import csw.util.itemSet.StateVariable.CurrentState
+import csw.util.param.Parameters.Setup
+import csw.util.param.StateVariable.CurrentState
 
 /**
  * Supports Java subclasses of AssemblyController

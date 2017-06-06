@@ -2,8 +2,8 @@ package javacsw.services.ccs;
 
 import akka.actor.ActorRef;
 import csw.services.ccs.Validation;
-import csw.util.itemSet.ItemSets.Setup;
-import csw.util.itemSet.ItemSets.Observe;
+import csw.util.param.Parameters.Setup;
+import csw.util.param.Parameters.Observe;
 import javacsw.services.pkg.AbstractAssemblyControllerWithPubSub;
 
 import java.util.Optional;

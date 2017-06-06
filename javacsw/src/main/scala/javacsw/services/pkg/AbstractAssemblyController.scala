@@ -5,8 +5,8 @@ import java.util.Optional
 import akka.actor.{AbstractActor, ActorRef}
 import csw.services.ccs.AssemblyController
 import csw.services.pkg.Assembly
-import csw.util.itemSet.ItemSets.{Observe, Setup}
-import csw.util.itemSet.StateVariable.CurrentStates
+import csw.util.param.Parameters.{Observe, Setup}
+import csw.util.param.StateVariable.CurrentStates
 import csw.services.ccs.Validation.Validation
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.akka.PublisherActor

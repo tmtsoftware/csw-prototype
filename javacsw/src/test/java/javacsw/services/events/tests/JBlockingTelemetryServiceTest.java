@@ -10,10 +10,10 @@ import akka.japi.Creator;
 import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
-import csw.util.itemSet.DoubleKey;
-import csw.util.itemSet.Events.*;
-import csw.util.itemSet.IntKey;
-import csw.util.itemSet.StringKey;
+import csw.util.param.DoubleKey;
+import csw.util.param.Events.*;
+import csw.util.param.IntKey;
+import csw.util.param.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -72,13 +72,13 @@ public class JBlockingTelemetryServiceTest {
 
     bts.publish(event1);
     StatusEvent val1 = bts.get(prefix1).get();
-    assertEquals(val1.prefix(), prefix1);
+    assertEquals(val1.prefixStr(), prefix1);
     assertEquals(val1.get(infoValue).get().head(), 1);
     assertEquals(val1.get(infoStr).get().head(), "info 1");
 
     bts.publish(event2);
     StatusEvent val2 = bts.get(prefix2).get();
-    assertEquals(val2.prefix(), prefix2);
+    assertEquals(val2.prefixStr(), prefix2);
     assertEquals(val2.get(infoValue).get().head(), 2);
     assertEquals(val2.get(infoStr).get().head(), "info 2");
 
@@ -226,11 +226,11 @@ public class JBlockingTelemetryServiceTest {
 
 
     private void handleStatusEvent(StatusEvent event) {
-      if (event.prefix().equals(prefix1)) {
+      if (event.prefixStr().equals(prefix1)) {
         count1++;
         assertEquals(event.get(infoValue).get().head(), count1);
         assertEquals(event.get(infoStr).get().head(), "info 1");
-      } else if (event.prefix().equals(prefix2)) {
+      } else if (event.prefixStr().equals(prefix2)) {
         count2++;
         assertEquals(event.get(infoValue).get().head(), count2);
         assertEquals(event.get(infoStr).get().head(), "info 2");

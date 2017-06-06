@@ -1,9 +1,9 @@
 package javacsw.util.itemSet;
 
-import csw.util.itemSet.ItemSets.*;
-import csw.util.itemSet.Item;
-import csw.util.itemSet.StateVariable.*;
-import csw.util.itemSet.Struct;
+import csw.util.param.Parameters.*;
+import csw.util.param.Parameter;
+import csw.util.param.StateVariable.*;
+import csw.util.param.Struct;
 
 import static javacsw.util.itemSet.JItems.*;
 
@@ -15,46 +15,46 @@ public class JConfigDSL {
      * Returns a new Setup
      * @param info information associated with the setup
      * @param itemSetKey identifies the target subsystem
-     * @param items one or more items (keys with values and units)
+     * @param parameters one or more items (keys with values and units)
      */
-    public static Setup sc(ItemSetInfo info, String itemSetKey, Item<?>... items) {
-        return jadd((new Setup(info, itemSetKey)), items);
+    public static Setup sc(CommandInfo info, String itemSetKey, Parameter<?>... parameters) {
+        return jadd((new Setup(info, itemSetKey)), parameters);
     }
 
     /**
      * Returns a new Observe
      * @param info information associated with the setup
      * @param itemSetKey identifies the target subsystem
-     * @param items one or more items (keys with values and units)
+     * @param parameters one or more items (keys with values and units)
      */
-    public static Observe oc(ItemSetInfo info, String itemSetKey, Item<?>... items) {
-        return jadd((new Observe(info, itemSetKey)), items);
+    public static Observe oc(CommandInfo info, String itemSetKey, Parameter<?>... parameters) {
+        return jadd((new Observe(info, itemSetKey)), parameters);
     }
 
     /**
      * Returns a new CurrentState
      * @param configKey identifies the target subsystem
-     * @param items one or more items (keys with values and units)
+     * @param parameters one or more items (keys with values and units)
      */
-    public static CurrentState cs(String configKey, Item<?>... items) {
-        return jadd((new CurrentState(configKey)), items);
+    public static CurrentState cs(String configKey, Parameter<?>... parameters) {
+        return jadd((new CurrentState(configKey)), parameters);
     }
 
     /**
      * Returns a new DemandState
      * @param configKey identifies the target subsystem
-     * @param items one or more items (keys with values and units)
+     * @param parameters one or more items (keys with values and units)
      */
-    public static DemandState ds(String configKey, Item<?>... items) {
-        return jadd((new DemandState(configKey)), items);
+    public static DemandState ds(String configKey, Parameter<?>... parameters) {
+        return jadd((new DemandState(configKey)), parameters);
     }
 
     /**
      * Returns a new DemandState
      * @param name the name of the struct
-     * @param items one or more items (keys with values and units)
+     * @param parameters one or more items (keys with values and units)
      */
-    public static Struct struct(String name, Item<?>... items) {
-        return jadd((new Struct(name)), items);
+    public static Struct struct(String name, Parameter<?>... parameters) {
+        return jadd((new Struct(name)), parameters);
     }
 }

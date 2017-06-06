@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
 import csw.services.ccs.Validation.Validation
-import csw.util.itemSet.ItemSets._
+import csw.util.param.Parameters._
 
 object AssemblyController {
 
@@ -20,7 +20,7 @@ object AssemblyController {
    *
    * @param itemset the configuration to execute
    */
-  case class Submit(itemset: ControlItemSet) extends AssemblyControllerMessage
+  case class Submit(itemset: ControlCommand) extends AssemblyControllerMessage
 
   /**
    * Message to submit a oneway config to the assembly.
@@ -30,7 +30,7 @@ object AssemblyController {
    *
    * @param itemset the configuration to execute
    */
-  case class OneWay(itemset: ControlItemSet) extends AssemblyControllerMessage
+  case class OneWay(itemset: ControlCommand) extends AssemblyControllerMessage
 
 }
 

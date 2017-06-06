@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.Parameters.Setup
 
 /**
  * TMT Source Code: 10/9/16.
@@ -34,7 +34,7 @@ object HcdMessages {
 
   /**
    * Message to subscribe the sender to the HCD's state.
-   * The sender will receive [[csw.util.itemSet.StateVariable.CurrentState]] messages from the HCD whenever it's state changes.
+   * The sender will receive [[csw.util.param.StateVariable.CurrentState]] messages from the HCD whenever it's state changes.
    */
   object Subscribe extends HcdMessages
 

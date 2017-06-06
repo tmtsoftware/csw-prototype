@@ -10,9 +10,9 @@ import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
 import csw.services.pkg.{Hcd, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
-import csw.util.itemSet.ItemSets.Setup
-import csw.util.itemSet.Events.StatusEvent
-import csw.util.itemSet.IntKey
+import csw.util.param.Parameters.Setup
+import csw.util.param.Events.StatusEvent
+import csw.util.param.IntKey
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

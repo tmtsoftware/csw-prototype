@@ -1,7 +1,7 @@
 package javacsw.util.itemSet;
 
-import csw.util.itemSet.Subsystem;
-import csw.util.itemSet.Subsystem.*;
+import csw.util.param.Subsystem;
+import csw.util.param.Subsystem.*;
 
 import java.util.Set;
 

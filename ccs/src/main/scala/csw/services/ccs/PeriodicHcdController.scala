@@ -1,7 +1,7 @@
 package csw.services.ccs
 
 import akka.actor._
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.Parameters.Setup
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._

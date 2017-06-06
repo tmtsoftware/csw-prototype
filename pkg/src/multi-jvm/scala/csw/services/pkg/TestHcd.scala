@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Supervisor.{Initialized, Running}
-import csw.util.itemSet.ItemSets.Setup
-import csw.util.itemSet.StateVariable.CurrentState
+import csw.util.param.Parameters.Setup
+import csw.util.param.StateVariable.CurrentState
 
 import scala.concurrent.duration._
 

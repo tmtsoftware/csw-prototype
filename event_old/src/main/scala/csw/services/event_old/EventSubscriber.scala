@@ -1,7 +1,7 @@
 package csw.services.event_old
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import csw.util.itemSet.ItemSetSerializer
+import csw.util.param.ItemSetSerializer
 import org.hornetq.api.core.client._
 import java.util.UUID
 

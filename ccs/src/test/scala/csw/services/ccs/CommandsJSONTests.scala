@@ -3,8 +3,8 @@ package csw.services.ccs
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.{OtherIssue, ValidationIssue, WrongInternalStateIssue}
-import csw.util.itemSet.ItemSets.{ItemSetInfo, SequenceItemSet, Setup}
-import csw.util.itemSet._
+import csw.util.param.Parameters.{CommandInfo, SequenceCommand, Setup}
+import csw.util.param._
 import org.scalatest.FunSpec
 import spray.json._
 
@@ -14,7 +14,7 @@ import spray.json._
 class CommandsJSONTests extends FunSpec with LazyLogging {
   import CommandsJSON._
 
-  val itemSetInfo = ItemSetInfo(ObsId("001"))
+  val itemSetInfo = CommandInfo(ObsId("001"))
 
   describe("Overall Tests") {
     it("should work with validation issues") {
@@ -86,11 +86,11 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val scIn: SequenceItemSet = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
+      val scIn: SequenceCommand = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
 
       val json = scIn.toJson
       logger.info(s"json: ${json.prettyPrint}")
-      val scOut = json.convertTo[SequenceItemSet]
+      val scOut = json.convertTo[SequenceCommand]
       logger.info(s"cs: $scOut")
       assert(scIn.equals(scOut))
     }

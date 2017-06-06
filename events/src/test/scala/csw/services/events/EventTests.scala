@@ -1,9 +1,9 @@
 package csw.services.events
 
-import csw.util.itemSet.Events.StatusEvent
+import csw.util.param.Events.StatusEvent
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.LazyLogging
-import csw.util.itemSet.{DoubleKey, StringKey}
+import csw.util.param.{DoubleKey, StringKey}
 
 object EventTests {
 

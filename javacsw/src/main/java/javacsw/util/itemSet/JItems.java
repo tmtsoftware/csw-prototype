@@ -1,9 +1,9 @@
 package javacsw.util.itemSet;
 
-import csw.util.itemSet.*;
-import csw.util.itemSet.Events.*;
-import csw.util.itemSet.ItemSets.ItemSet;
-import csw.util.itemSet.ItemSets.*;
+import csw.util.param.*;
+import csw.util.param.Events.*;
+import csw.util.param.Parameters.ParameterSetType;
+import csw.util.param.Parameters.*;
 
 import java.util.*;
 
@@ -17,31 +17,31 @@ public class JItems {
     return new BooleanKey(name);
   }
 
-  public static Boolean jvalue(BooleanItem item) {
+  public static Boolean jvalue(BooleanParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Boolean jvalue(BooleanItem item, int index) {
+  public static Boolean jvalue(BooleanParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Boolean> jvalues(BooleanItem item) {
+  public static List<Boolean> jvalues(BooleanParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Boolean> jget(BooleanItem item, int index) {
+  public static Optional<Boolean> jget(BooleanParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static BooleanItem jset(BooleanKey key, java.util.List<Boolean> v) {
+  public static BooleanParameter jset(BooleanKey key, java.util.List<Boolean> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static BooleanItem jset(BooleanKey key, java.util.List<Boolean> v, UnitsOfMeasure.Units units) {
+  public static BooleanParameter jset(BooleanKey key, java.util.List<Boolean> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static BooleanItem jset(BooleanKey key, Boolean... v) {
+  public static BooleanParameter jset(BooleanKey key, Boolean... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -50,35 +50,35 @@ public class JItems {
     return new ByteArrayKey(name);
   }
 
-  public static ByteArray jvalue(ByteArrayItem item) {
+  public static ByteArray jvalue(ByteArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static ByteArray jvalue(ByteArrayItem item, int index) {
+  public static ByteArray jvalue(ByteArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<ByteArray> jvalues(ByteArrayItem item) {
+  public static List<ByteArray> jvalues(ByteArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<ByteArray> jget(ByteArrayItem item, int index) {
+  public static Optional<ByteArray> jget(ByteArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ByteArrayItem jset(ByteArrayKey key, java.util.List<ByteArray> v) {
+  public static ByteArrayParameter jset(ByteArrayKey key, java.util.List<ByteArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ByteArrayItem jset(ByteArrayKey key, java.util.List<ByteArray> v, UnitsOfMeasure.Units units) {
+  public static ByteArrayParameter jset(ByteArrayKey key, java.util.List<ByteArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ByteArrayItem jset(ByteArrayKey key, byte[] v, UnitsOfMeasure.Units units) {
+  public static ByteArrayParameter jset(ByteArrayKey key, byte[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(ByteArray(v)), units);
   }
 
-  public static ByteArrayItem jset(ByteArrayKey key, byte[]... vin) {
+  public static ByteArrayParameter jset(ByteArrayKey key, byte[]... vin) {
     List<ByteArray> v = new ArrayList<>();
     for (byte[] dv : vin) {
       v.add(ByteArray(dv));
@@ -86,7 +86,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ByteArrayItem jset(ByteArrayKey key, ByteArray... v) {
+  public static ByteArrayParameter jset(ByteArrayKey key, ByteArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -99,43 +99,43 @@ public class JItems {
     return new ByteMatrixKey(name);
   }
 
-  public static ByteMatrix jvalue(ByteMatrixItem item) {
+  public static ByteMatrix jvalue(ByteMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static ByteMatrix jvalue(ByteMatrixItem item, int index) {
+  public static ByteMatrix jvalue(ByteMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<ByteMatrix> jvalues(ByteMatrixItem item) {
+  public static List<ByteMatrix> jvalues(ByteMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<ByteMatrix> jget(ByteMatrixItem item, int index) {
+  public static Optional<ByteMatrix> jget(ByteMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, java.util.List<ByteMatrix> v) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, java.util.List<ByteMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, java.util.List<ByteMatrix> v, UnitsOfMeasure.Units units) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, java.util.List<ByteMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, ByteMatrix... v) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, ByteMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, byte[][] v) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, byte[][] v) {
     return JavaHelpers.jset(key, ByteMatrix(v));
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, byte[][] v, UnitsOfMeasure.Units units) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, byte[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(ByteMatrix(v)), units);
   }
 
-  public static ByteMatrixItem jset(ByteMatrixKey key, byte[][]... vin) {
+  public static ByteMatrixParameter jset(ByteMatrixKey key, byte[][]... vin) {
     List<ByteMatrix> v = new ArrayList<>();
     for (byte[][] dv : vin) {
       v.add(ByteMatrix(dv));
@@ -153,31 +153,31 @@ public class JItems {
     return new CharKey(name);
   }
 
-  public static Character jvalue(CharItem item) {
+  public static Character jvalue(CharParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Character jvalue(CharItem item, int index) {
+  public static Character jvalue(CharParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Character> jvalues(CharItem item) {
+  public static List<Character> jvalues(CharParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Character> jget(CharItem item, int index) {
+  public static Optional<Character> jget(CharParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static CharItem jset(CharKey key, java.util.List<Character> v) {
+  public static CharParameter jset(CharKey key, java.util.List<Character> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static CharItem jset(CharKey key, java.util.List<Character> v, UnitsOfMeasure.Units units) {
+  public static CharParameter jset(CharKey key, java.util.List<Character> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static CharItem jset(CharKey key, Character... v) {
+  public static CharParameter jset(CharKey key, Character... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -186,31 +186,31 @@ public class JItems {
     return new DoubleKey(name);
   }
 
-  public static Double jvalue(DoubleItem item) {
+  public static Double jvalue(DoubleParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Double jvalue(DoubleItem item, int index) {
+  public static Double jvalue(DoubleParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Double> jvalues(DoubleItem item) {
+  public static List<Double> jvalues(DoubleParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Double> jget(DoubleItem item, int index) {
+  public static Optional<Double> jget(DoubleParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static DoubleItem jset(DoubleKey key, java.util.List<Double> v) {
+  public static DoubleParameter jset(DoubleKey key, java.util.List<Double> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static DoubleItem jset(DoubleKey key, java.util.List<Double> v, UnitsOfMeasure.Units units) {
+  public static DoubleParameter jset(DoubleKey key, java.util.List<Double> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static DoubleItem jset(DoubleKey key, Double... v) {
+  public static DoubleParameter jset(DoubleKey key, Double... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -219,35 +219,35 @@ public class JItems {
     return new DoubleArrayKey(name);
   }
 
-  public static DoubleArray jvalue(DoubleArrayItem item) {
+  public static DoubleArray jvalue(DoubleArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static DoubleArray jvalue(DoubleArrayItem item, int index) {
+  public static DoubleArray jvalue(DoubleArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<DoubleArray> jvalues(DoubleArrayItem item) {
+  public static List<DoubleArray> jvalues(DoubleArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<DoubleArray> jget(DoubleArrayItem item, int index) {
+  public static Optional<DoubleArray> jget(DoubleArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static DoubleArrayItem jset(DoubleArrayKey key, java.util.List<DoubleArray> v) {
+  public static DoubleArrayParameter jset(DoubleArrayKey key, java.util.List<DoubleArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static DoubleArrayItem jset(DoubleArrayKey key, java.util.List<DoubleArray> v, UnitsOfMeasure.Units units) {
+  public static DoubleArrayParameter jset(DoubleArrayKey key, java.util.List<DoubleArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static DoubleArrayItem jset(DoubleArrayKey key, double[] v, UnitsOfMeasure.Units units) {
+  public static DoubleArrayParameter jset(DoubleArrayKey key, double[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(DoubleArray(v)), units);
   }
 
-  public static DoubleArrayItem jset(DoubleArrayKey key, double[]... vin) {
+  public static DoubleArrayParameter jset(DoubleArrayKey key, double[]... vin) {
     List<DoubleArray> v = new ArrayList<>();
     for (double[] dv : vin) {
       v.add(DoubleArray(dv));
@@ -255,7 +255,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static DoubleArrayItem jset(DoubleArrayKey key, DoubleArray... v) {
+  public static DoubleArrayParameter jset(DoubleArrayKey key, DoubleArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -268,43 +268,43 @@ public class JItems {
     return new DoubleMatrixKey(name);
   }
 
-  public static DoubleMatrix jvalue(DoubleMatrixItem item) {
+  public static DoubleMatrix jvalue(DoubleMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static DoubleMatrix jvalue(DoubleMatrixItem item, int index) {
+  public static DoubleMatrix jvalue(DoubleMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<DoubleMatrix> jvalues(DoubleMatrixItem item) {
+  public static List<DoubleMatrix> jvalues(DoubleMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<DoubleMatrix> jget(DoubleMatrixItem item, int index) {
+  public static Optional<DoubleMatrix> jget(DoubleMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v, UnitsOfMeasure.Units units) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, DoubleMatrix... v) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, DoubleMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, double[][] v) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, double[][] v) {
     return JavaHelpers.jset(key, DoubleMatrix(v));
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, double[][] v, UnitsOfMeasure.Units units) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, double[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(DoubleMatrix(v)), units);
   }
 
-  public static DoubleMatrixItem jset(DoubleMatrixKey key, double[][]... vin) {
+  public static DoubleMatrixParameter jset(DoubleMatrixKey key, double[][]... vin) {
     List<DoubleMatrix> v = new ArrayList<>();
     for (double[][] dv : vin) {
       v.add(DoubleMatrix(dv));
@@ -321,31 +321,31 @@ public class JItems {
     return new FloatKey(name);
   }
 
-  public static Float jvalue(FloatItem item) {
+  public static Float jvalue(FloatParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Float jvalue(FloatItem item, int index) {
+  public static Float jvalue(FloatParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Float> jvalues(FloatItem item) {
+  public static List<Float> jvalues(FloatParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Float> jget(FloatItem item, int index) {
+  public static Optional<Float> jget(FloatParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static FloatItem jset(FloatKey key, java.util.List<Float> v) {
+  public static FloatParameter jset(FloatKey key, java.util.List<Float> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static FloatItem jset(FloatKey key, java.util.List<Float> v, UnitsOfMeasure.Units units) {
+  public static FloatParameter jset(FloatKey key, java.util.List<Float> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static FloatItem jset(FloatKey key, Float... v) {
+  public static FloatParameter jset(FloatKey key, Float... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -354,35 +354,35 @@ public class JItems {
     return new FloatArrayKey(name);
   }
 
-  public static FloatArray jvalue(FloatArrayItem item) {
+  public static FloatArray jvalue(FloatArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static FloatArray jvalue(FloatArrayItem item, int index) {
+  public static FloatArray jvalue(FloatArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<FloatArray> jvalues(FloatArrayItem item) {
+  public static List<FloatArray> jvalues(FloatArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<FloatArray> jget(FloatArrayItem item, int index) {
+  public static Optional<FloatArray> jget(FloatArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static FloatArrayItem jset(FloatArrayKey key, java.util.List<FloatArray> v) {
+  public static FloatArrayParameter jset(FloatArrayKey key, java.util.List<FloatArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static FloatArrayItem jset(FloatArrayKey key, java.util.List<FloatArray> v, UnitsOfMeasure.Units units) {
+  public static FloatArrayParameter jset(FloatArrayKey key, java.util.List<FloatArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static FloatArrayItem jset(FloatArrayKey key, float[] v, UnitsOfMeasure.Units units) {
+  public static FloatArrayParameter jset(FloatArrayKey key, float[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(FloatArray(v)), units);
   }
 
-  public static FloatArrayItem jset(FloatArrayKey key, float[]... vin) {
+  public static FloatArrayParameter jset(FloatArrayKey key, float[]... vin) {
     List<FloatArray> v = new ArrayList<>();
     for (float[] dv : vin) {
       v.add(FloatArray(dv));
@@ -390,7 +390,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static FloatArrayItem jset(FloatArrayKey key, FloatArray... v) {
+  public static FloatArrayParameter jset(FloatArrayKey key, FloatArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -404,43 +404,43 @@ public class JItems {
     return new FloatMatrixKey(name);
   }
 
-  public static FloatMatrix jvalue(FloatMatrixItem item) {
+  public static FloatMatrix jvalue(FloatMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static FloatMatrix jvalue(FloatMatrixItem item, int index) {
+  public static FloatMatrix jvalue(FloatMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<FloatMatrix> jvalues(FloatMatrixItem item) {
+  public static List<FloatMatrix> jvalues(FloatMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<FloatMatrix> jget(FloatMatrixItem item, int index) {
+  public static Optional<FloatMatrix> jget(FloatMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, java.util.List<FloatMatrix> v) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, java.util.List<FloatMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, java.util.List<FloatMatrix> v, UnitsOfMeasure.Units units) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, java.util.List<FloatMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, FloatMatrix... v) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, FloatMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, float[][] v) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, float[][] v) {
     return JavaHelpers.jset(key, FloatMatrix(v));
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, float[][] v, UnitsOfMeasure.Units units) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, float[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(FloatMatrix(v)), units);
   }
 
-  public static FloatMatrixItem jset(FloatMatrixKey key, float[][]... vin) {
+  public static FloatMatrixParameter jset(FloatMatrixKey key, float[][]... vin) {
     List<FloatMatrix> v = new ArrayList<>();
     for (float[][] dv : vin) {
       v.add(FloatMatrix(dv));
@@ -457,31 +457,31 @@ public class JItems {
     return new IntKey(name);
   }
 
-  public static Integer jvalue(IntItem item) {
+  public static Integer jvalue(IntParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Integer jvalue(IntItem item, int index) {
+  public static Integer jvalue(IntParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Integer> jvalues(IntItem item) {
+  public static List<Integer> jvalues(IntParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Integer> jget(IntItem item, int index) {
+  public static Optional<Integer> jget(IntParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static IntItem jset(IntKey key, java.util.List<Integer> v) {
+  public static IntParameter jset(IntKey key, java.util.List<Integer> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static IntItem jset(IntKey key, java.util.List<Integer> v, UnitsOfMeasure.Units units) {
+  public static IntParameter jset(IntKey key, java.util.List<Integer> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static IntItem jset(IntKey key, Integer... v) {
+  public static IntParameter jset(IntKey key, Integer... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -490,35 +490,35 @@ public class JItems {
     return new IntArrayKey(name);
   }
 
-  public static IntArray jvalue(IntArrayItem item) {
+  public static IntArray jvalue(IntArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static IntArray jvalue(IntArrayItem item, int index) {
+  public static IntArray jvalue(IntArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<IntArray> jvalues(IntArrayItem item) {
+  public static List<IntArray> jvalues(IntArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<IntArray> jget(IntArrayItem item, int index) {
+  public static Optional<IntArray> jget(IntArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static IntArrayItem jset(IntArrayKey key, java.util.List<IntArray> v) {
+  public static IntArrayParameter jset(IntArrayKey key, java.util.List<IntArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static IntArrayItem jset(IntArrayKey key, java.util.List<IntArray> v, UnitsOfMeasure.Units units) {
+  public static IntArrayParameter jset(IntArrayKey key, java.util.List<IntArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static IntArrayItem jset(IntArrayKey key, int[] v, UnitsOfMeasure.Units units) {
+  public static IntArrayParameter jset(IntArrayKey key, int[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(IntArray(v)), units);
   }
 
-  public static IntArrayItem jset(IntArrayKey key, int[]... vin) {
+  public static IntArrayParameter jset(IntArrayKey key, int[]... vin) {
     List<IntArray> v = new ArrayList<>();
     for (int[] dv : vin) {
       v.add(IntArray(dv));
@@ -526,7 +526,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static IntArrayItem jset(IntArrayKey key, IntArray... v) {
+  public static IntArrayParameter jset(IntArrayKey key, IntArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -539,43 +539,43 @@ public class JItems {
     return new IntMatrixKey(name);
   }
 
-  public static IntMatrix jvalue(IntMatrixItem item) {
+  public static IntMatrix jvalue(IntMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static IntMatrix jvalue(IntMatrixItem item, int index) {
+  public static IntMatrix jvalue(IntMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<IntMatrix> jvalues(IntMatrixItem item) {
+  public static List<IntMatrix> jvalues(IntMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<IntMatrix> jget(IntMatrixItem item, int index) {
+  public static Optional<IntMatrix> jget(IntMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, java.util.List<IntMatrix> v) {
+  public static IntMatrixParameter jset(IntMatrixKey key, java.util.List<IntMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, java.util.List<IntMatrix> v, UnitsOfMeasure.Units units) {
+  public static IntMatrixParameter jset(IntMatrixKey key, java.util.List<IntMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, IntMatrix... v) {
+  public static IntMatrixParameter jset(IntMatrixKey key, IntMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, int[][] v) {
+  public static IntMatrixParameter jset(IntMatrixKey key, int[][] v) {
     return JavaHelpers.jset(key, IntMatrix(v));
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, int[][] v, UnitsOfMeasure.Units units) {
+  public static IntMatrixParameter jset(IntMatrixKey key, int[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(IntMatrix(v)), units);
   }
 
-  public static IntMatrixItem jset(IntMatrixKey key, int[][]... vin) {
+  public static IntMatrixParameter jset(IntMatrixKey key, int[][]... vin) {
     List<IntMatrix> v = new ArrayList<>();
     for (int[][] dv : vin) {
       v.add(IntMatrix(dv));
@@ -593,31 +593,31 @@ public class JItems {
     return new LongKey(name);
   }
 
-  public static Long jvalue(LongItem item) {
+  public static Long jvalue(LongParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Long jvalue(LongItem item, int index) {
+  public static Long jvalue(LongParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Long> jvalues(LongItem item) {
+  public static List<Long> jvalues(LongParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Long> jget(LongItem item, int index) {
+  public static Optional<Long> jget(LongParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static LongItem jset(LongKey key, java.util.List<Long> v) {
+  public static LongParameter jset(LongKey key, java.util.List<Long> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static LongItem jset(LongKey key, java.util.List<Long> v, UnitsOfMeasure.Units units) {
+  public static LongParameter jset(LongKey key, java.util.List<Long> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static LongItem jset(LongKey key, Long... v) {
+  public static LongParameter jset(LongKey key, Long... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -626,35 +626,35 @@ public class JItems {
     return new LongArrayKey(name);
   }
 
-  public static LongArray jvalue(LongArrayItem item) {
+  public static LongArray jvalue(LongArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static LongArray jvalue(LongArrayItem item, int index) {
+  public static LongArray jvalue(LongArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<LongArray> jvalues(LongArrayItem item) {
+  public static List<LongArray> jvalues(LongArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<LongArray> jget(LongArrayItem item, int index) {
+  public static Optional<LongArray> jget(LongArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static LongArrayItem jset(LongArrayKey key, java.util.List<LongArray> v) {
+  public static LongArrayParameter jset(LongArrayKey key, java.util.List<LongArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static LongArrayItem jset(LongArrayKey key, java.util.List<LongArray> v, UnitsOfMeasure.Units units) {
+  public static LongArrayParameter jset(LongArrayKey key, java.util.List<LongArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static LongArrayItem jset(LongArrayKey key, long[] v, UnitsOfMeasure.Units units) {
+  public static LongArrayParameter jset(LongArrayKey key, long[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(LongArray(v)), units);
   }
 
-  public static LongArrayItem jset(LongArrayKey key, long[]... vin) {
+  public static LongArrayParameter jset(LongArrayKey key, long[]... vin) {
     List<LongArray> v = new ArrayList<>();
     for (long[] dv : vin) {
       v.add(LongArray(dv));
@@ -662,7 +662,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static LongArrayItem jset(LongArrayKey key, LongArray... v) {
+  public static LongArrayParameter jset(LongArrayKey key, LongArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -675,43 +675,43 @@ public class JItems {
     return new LongMatrixKey(name);
   }
 
-  public static LongMatrix jvalue(LongMatrixItem item) {
+  public static LongMatrix jvalue(LongMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static LongMatrix jvalue(LongMatrixItem item, int index) {
+  public static LongMatrix jvalue(LongMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<LongMatrix> jvalues(LongMatrixItem item) {
+  public static List<LongMatrix> jvalues(LongMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<LongMatrix> jget(LongMatrixItem item, int index) {
+  public static Optional<LongMatrix> jget(LongMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, java.util.List<LongMatrix> v) {
+  public static LongMatrixParameter jset(LongMatrixKey key, java.util.List<LongMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, java.util.List<LongMatrix> v, UnitsOfMeasure.Units units) {
+  public static LongMatrixParameter jset(LongMatrixKey key, java.util.List<LongMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, LongMatrix... v) {
+  public static LongMatrixParameter jset(LongMatrixKey key, LongMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, long[][] v) {
+  public static LongMatrixParameter jset(LongMatrixKey key, long[][] v) {
     return JavaHelpers.jset(key, LongMatrix(v));
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, long[][] v, UnitsOfMeasure.Units units) {
+  public static LongMatrixParameter jset(LongMatrixKey key, long[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(LongMatrix(v)), units);
   }
 
-  public static LongMatrixItem jset(LongMatrixKey key, long[][]... vin) {
+  public static LongMatrixParameter jset(LongMatrixKey key, long[][]... vin) {
     List<LongMatrix> v = new ArrayList<>();
     for (long[][] dv : vin) {
       v.add(LongMatrix(dv));
@@ -728,31 +728,31 @@ public class JItems {
     return new ShortKey(name);
   }
 
-  public static Short jvalue(ShortItem item) {
+  public static Short jvalue(ShortParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Short jvalue(ShortItem item, int index) {
+  public static Short jvalue(ShortParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Short> jvalues(ShortItem item) {
+  public static List<Short> jvalues(ShortParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Short> jget(ShortItem item, int index) {
+  public static Optional<Short> jget(ShortParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ShortItem jset(ShortKey key, java.util.List<Short> v) {
+  public static ShortParameter jset(ShortKey key, java.util.List<Short> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ShortItem jset(ShortKey key, java.util.List<Short> v, UnitsOfMeasure.Units units) {
+  public static ShortParameter jset(ShortKey key, java.util.List<Short> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ShortItem jset(ShortKey key, Short... v) {
+  public static ShortParameter jset(ShortKey key, Short... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -761,35 +761,35 @@ public class JItems {
     return new ShortArrayKey(name);
   }
 
-  public static ShortArray jvalue(ShortArrayItem item) {
+  public static ShortArray jvalue(ShortArrayParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static ShortArray jvalue(ShortArrayItem item, int index) {
+  public static ShortArray jvalue(ShortArrayParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<ShortArray> jvalues(ShortArrayItem item) {
+  public static List<ShortArray> jvalues(ShortArrayParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<ShortArray> jget(ShortArrayItem item, int index) {
+  public static Optional<ShortArray> jget(ShortArrayParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ShortArrayItem jset(ShortArrayKey key, java.util.List<ShortArray> v) {
+  public static ShortArrayParameter jset(ShortArrayKey key, java.util.List<ShortArray> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ShortArrayItem jset(ShortArrayKey key, java.util.List<ShortArray> v, UnitsOfMeasure.Units units) {
+  public static ShortArrayParameter jset(ShortArrayKey key, java.util.List<ShortArray> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ShortArrayItem jset(ShortArrayKey key, short[] v, UnitsOfMeasure.Units units) {
+  public static ShortArrayParameter jset(ShortArrayKey key, short[] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(ShortArray(v)), units);
   }
 
-  public static ShortArrayItem jset(ShortArrayKey key, short[]... vin) {
+  public static ShortArrayParameter jset(ShortArrayKey key, short[]... vin) {
     List<ShortArray> v = new ArrayList<>();
     for (short[] dv : vin) {
       v.add(ShortArray(dv));
@@ -797,7 +797,7 @@ public class JItems {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ShortArrayItem jset(ShortArrayKey key, ShortArray... v) {
+  public static ShortArrayParameter jset(ShortArrayKey key, ShortArray... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -810,43 +810,43 @@ public class JItems {
     return new ShortMatrixKey(name);
   }
 
-  public static ShortMatrix jvalue(ShortMatrixItem item) {
+  public static ShortMatrix jvalue(ShortMatrixParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static ShortMatrix jvalue(ShortMatrixItem item, int index) {
+  public static ShortMatrix jvalue(ShortMatrixParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<ShortMatrix> jvalues(ShortMatrixItem item) {
+  public static List<ShortMatrix> jvalues(ShortMatrixParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<ShortMatrix> jget(ShortMatrixItem item, int index) {
+  public static Optional<ShortMatrix> jget(ShortMatrixParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, java.util.List<ShortMatrix> v) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, java.util.List<ShortMatrix> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, java.util.List<ShortMatrix> v, UnitsOfMeasure.Units units) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, java.util.List<ShortMatrix> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, ShortMatrix... v) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, ShortMatrix... v) {
     return JavaHelpers.jset(key, v);
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, short[][] v) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, short[][] v) {
     return JavaHelpers.jset(key, ShortMatrix(v));
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, short[][] v, UnitsOfMeasure.Units units) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, short[][] v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, Collections.singletonList(ShortMatrix(v)), units);
   }
 
-  public static ShortMatrixItem jset(ShortMatrixKey key, short[][]... vin) {
+  public static ShortMatrixParameter jset(ShortMatrixKey key, short[][]... vin) {
     List<ShortMatrix> v = new ArrayList<>();
     for (short[][] dv : vin) {
       v.add(ShortMatrix(dv));
@@ -863,31 +863,31 @@ public class JItems {
     return new StringKey(name);
   }
 
-  public static String jvalue(StringItem item) {
+  public static String jvalue(StringParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static String jvalue(StringItem item, int index) {
+  public static String jvalue(StringParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<String> jvalues(StringItem item) {
+  public static List<String> jvalues(StringParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<String> jget(StringItem item, int index) {
+  public static Optional<String> jget(StringParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static StringItem jset(StringKey key, java.util.List<String> v) {
+  public static StringParameter jset(StringKey key, java.util.List<String> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static StringItem jset(StringKey key, java.util.List<String> v, UnitsOfMeasure.Units units) {
+  public static StringParameter jset(StringKey key, java.util.List<String> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static StringItem jset(StringKey key, String... v) {
+  public static StringParameter jset(StringKey key, String... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -900,31 +900,31 @@ public class JItems {
     return new Choice(s);
   }
 
-  public static Choice jvalue(ChoiceItem item) {
+  public static Choice jvalue(ChoiceParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Choice jvalue(ChoiceItem item, int index) {
+  public static Choice jvalue(ChoiceParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Choice> jvalues(ChoiceItem item) {
+  public static List<Choice> jvalues(ChoiceParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Choice> jget(ChoiceItem item, int index) {
+  public static Optional<Choice> jget(ChoiceParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v) {
+  public static ChoiceParameter jset(ChoiceKey key, java.util.List<Choice> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v, UnitsOfMeasure.Units units) {
+  public static ChoiceParameter jset(ChoiceKey key, java.util.List<Choice> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static ChoiceItem jset(ChoiceKey key, Choice... v) {
+  public static ChoiceParameter jset(ChoiceKey key, Choice... v) {
     return JavaHelpers.jset(key, v);
   }
 
@@ -933,50 +933,50 @@ public class JItems {
     return new StructKey(name);
   }
 
-  public static Struct jvalue(StructItem item) {
+  public static Struct jvalue(StructParameter item) {
     return JavaHelpers.jvalue(item);
   }
 
-  public static Struct jvalue(StructItem item, int index) {
+  public static Struct jvalue(StructParameter item, int index) {
     return JavaHelpers.jvalue(item, index);
   }
 
-  public static List<Struct> jvalues(StructItem item) {
+  public static List<Struct> jvalues(StructParameter item) {
     return JavaHelpers.jvalues(item);
   }
 
-  public static Optional<Struct> jget(StructItem item, int index) {
+  public static Optional<Struct> jget(StructParameter item, int index) {
     return JavaHelpers.jget(item, index);
   }
 
-  public static StructItem jset(StructKey key, java.util.List<Struct> v) {
+  public static StructParameter jset(StructKey key, java.util.List<Struct> v) {
     return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
-  public static StructItem jset(StructKey key, java.util.List<Struct> v, UnitsOfMeasure.Units units) {
+  public static StructParameter jset(StructKey key, java.util.List<Struct> v, UnitsOfMeasure.Units units) {
     return JavaHelpers.jset(key, v, units);
   }
 
-  public static StructItem jset(StructKey key, Struct... v) {
+  public static StructParameter jset(StructKey key, Struct... v) {
     return JavaHelpers.jset(key, v);
   }
 
 
   // ---------------- Configuration level
 
-  public static Setup Setup(ItemSetInfo info, String name) {
+  public static Setup Setup(CommandInfo info, String name) {
     return new Setup(info, name);
   }
 
-  public static Setup Setup(ItemSetInfo info, ItemSetKey key) {
+  public static Setup Setup(CommandInfo info, Prefix key) {
     return new Setup(info, key, new scala.collection.immutable.HashSet<>());
   }
 
-  public static Observe Observe(ItemSetInfo info, String name) {
+  public static Observe Observe(CommandInfo info, String name) {
     return new Observe(info, name);
   }
 
-  public static Wait Wait(ItemSetInfo info, String name) {
+  public static Wait Wait(CommandInfo info, String name) {
     return new Wait(info, name);
   }
 
@@ -1002,11 +1002,11 @@ public class JItems {
    * @param <T> The type of the configuration sc
    * @return Optional item
    */
-  public static <S, I extends Item<S>, T extends ItemSet<T>> Optional<I> jgetItem(T sc, Key<S, I> key) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> Optional<I> jgetItem(T sc, Key<S, I> key) {
     return JavaHelpers.jget(sc, key);
   }
 
-  public static <S, I extends Item<S>, T extends ItemSet<T>> I jitem(T sc, Key<S, I> key) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> I jitem(T sc, Key<S, I> key) {
     Optional<I> item = JavaHelpers.jget(sc, key);
     // While Optional will throw its own exception, I choose to check and throw my own with hopefully a better message.
     if (item.isPresent()) {
@@ -1015,18 +1015,18 @@ public class JItems {
     throw new NoSuchElementException("Key: " + key.keyName() + " was not found.");
   }
 
-  public static <S, I extends Item<S>, T extends ItemSet<T>, J> Optional<J> jget(T sc, Key<S, I> key, int index) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>, J> Optional<J> jget(T sc, Key<S, I> key, int index) {
     return JavaHelpers.jget(sc, key, index);
   }
 
   // I believe it's okay to do this annotation since I is a reasonably known type based on items
   @SafeVarargs
-  public static <I extends Item<?>, T extends ItemSet<T>> T jadd(T sc, I... itemsIn) {
+  public static <I extends Parameter<?>, T extends ParameterSetType<T>> T jadd(T sc, I... itemsIn) {
     List<I> ilist = Arrays.asList(itemsIn);
     return JavaHelpers.jadd(sc, ilist);
   }
 
-  public static <S, I extends Item<S>, T extends ItemSet<T>> T jremove(T sc, Key<S, I> key) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> T jremove(T sc, Key<S, I> key) {
     if (!sc.exists(key)) throw new NoSuchElementException("Item: " + key.keyName() + " could not be found");
     return sc.remove(key);
   }

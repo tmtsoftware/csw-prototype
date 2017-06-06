@@ -9,7 +9,7 @@ import csw.services.events.EventServiceSettings;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
-import csw.util.itemSet.Events.EventServiceEvent;
+import csw.util.param.Events.EventServiceEvent;
 import scala.Unit;
 
 import java.util.concurrent.CompletableFuture;

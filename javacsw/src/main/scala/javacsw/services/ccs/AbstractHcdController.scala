@@ -2,7 +2,7 @@ package javacsw.services.ccs
 
 import akka.actor.AbstractActor
 import csw.services.ccs.HcdController
-import csw.util.itemSet.StateVariable.CurrentState
+import csw.util.param.StateVariable.CurrentState
 
 /**
  * Supports Java subclasses of HcdController

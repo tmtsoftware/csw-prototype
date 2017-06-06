@@ -4,8 +4,8 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.event_old.EventPubSubTest._
-import csw.util.itemSet.Events.ObserveEvent
-import csw.util.itemSet._
+import csw.util.param.Events.ObserveEvent
+import csw.util.param._
 import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSuiteLike}
 
 import scala.concurrent.ExecutionContext
@@ -136,7 +136,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
-    import csw.util.itemSet.ItemSetDsl._
+    import csw.util.param.ItemSetDsl._
     oe(
       prefix,
       eventNum -> num,

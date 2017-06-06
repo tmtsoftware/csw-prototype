@@ -3,8 +3,8 @@ package csw.services.events
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
-import csw.util.itemSet.Events.StatusEvent
-import csw.util.itemSet.{BooleanKey, DoubleKey, IntKey, StringKey}
+import csw.util.param.Events.StatusEvent
+import csw.util.param.{BooleanKey, DoubleKey, IntKey, StringKey}
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -64,7 +64,7 @@ class TelemetryServiceTests
     assert(bts.get(prefix).isDefined)
     val val1: StatusEvent = bts.get(prefix).get
 
-    assert(val1.prefix == prefix)
+    assert(val1.prefixStr == prefix)
     assert(val1.get(infoValue).isDefined)
     assert(val1(infoValue).head == 1)
     assert(val1(infoStr).head == "info 1")
@@ -125,7 +125,7 @@ class TelemetryServiceTests
       res3 <- ts.get(prefix)
       _ <- ts.delete(prefix)
     } yield {
-      assert(val1.exists(_.prefix == prefix))
+      assert(val1.exists(_.prefixStr == prefix))
       assert(val1.exists(_(infoValue).head == 1))
       assert(val1.exists(_(infoStr).head == "info 1"))
       assert(val2.exists(_(infoValue).head == 2))
@@ -255,12 +255,12 @@ class MySubscriber(prefix1: String, prefix2: String) extends Actor {
   var count2 = 0
 
   def receive: Receive = {
-    case event: StatusEvent if event.prefix == prefix1 =>
+    case event: StatusEvent if event.prefixStr == prefix1 =>
       count1 = count1 + 1
       assert(event(infoValue).head == count1)
       assert(event(infoStr).head == "info 1")
 
-    case event: StatusEvent if event.prefix == prefix2 =>
+    case event: StatusEvent if event.prefixStr == prefix2 =>
       count2 = count2 + 1
       assert(event(infoValue).head == count2)
       assert(event(infoStr).head == "info 2")

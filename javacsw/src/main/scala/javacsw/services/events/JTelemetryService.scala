@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.events.TelemetryService
-import csw.util.itemSet.Events._
+import csw.util.param.Events._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._

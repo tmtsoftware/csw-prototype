@@ -2,8 +2,8 @@ package csw.services.ccs
 
 import akka.actor.Actor
 import csw.util.akka.PublisherActor
-import csw.util.itemSet.StateVariable.CurrentState
-import csw.util.itemSet.ItemSets._
+import csw.util.param.StateVariable.CurrentState
+import csw.util.param.Parameters._
 
 /**
  * Command service controller

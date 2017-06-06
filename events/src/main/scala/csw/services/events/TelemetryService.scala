@@ -6,8 +6,8 @@ import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
-import csw.util.itemSet.ItemSetSerializer.{read, write}
-import csw.util.itemSet.Events.StatusEvent
+import csw.util.param.ItemSetSerializer.{read, write}
+import csw.util.param.Events.StatusEvent
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration.Duration
@@ -355,7 +355,7 @@ case class TelemetryServiceImpl(redisClient: RedisClient, scope: String) extends
     val h = if (history >= 0) history else 0
     // Use a transaction to send all commands at once
     val redisTransaction = redisClient.transaction()
-    val key = scopedKey(event.prefix)
+    val key = scopedKey(event.prefixStr)
     redisTransaction.watch(key)
     val f1 = redisTransaction.lpush(key, bs)
     val f2 = redisTransaction.ltrim(key, 0, h + 1)

@@ -3,9 +3,9 @@ package csw.services.ccs
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import csw.util.akka.PublisherActor
-import csw.util.itemSet.StateVariable
-import csw.util.itemSet.StateVariable.{CurrentState, DemandState, Matcher}
-import csw.util.itemSet.RunId
+import csw.util.param.StateVariable
+import csw.util.param.StateVariable.{CurrentState, DemandState, Matcher}
+import csw.util.param.RunId
 
 import scala.concurrent.duration._
 
@@ -55,7 +55,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
   def waiting(results: Set[CurrentState]): Receive = {
     case current: CurrentState =>
       log.debug(s"received current state: $current")
-      demands.find(_.prefix == current.prefix).foreach { demand =>
+      demands.find(_.prefixStr == current.prefixStr).foreach { demand =>
         if (matcher(demand, current)) {
           val set = results + current
           if (set.size == demands.size) {

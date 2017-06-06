@@ -10,8 +10,8 @@ import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus.CommandResponse
 import csw.services.ccs.Validation.{Valid, Validation}
-import csw.util.itemSet.ItemSets.{ItemSetInfo, Setup}
-import csw.util.itemSet.{ObsId, StringKey}
+import csw.util.param.Parameters.{CommandInfo, Setup}
+import csw.util.param.{ObsId, StringKey}
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
@@ -105,7 +105,7 @@ class AssemblyControllerTests extends TestKit(AssemblyControllerTests.system)
     val obsId = ObsId("obs0001")
 
     // Send a setup config to the Assembly
-    val setup = Setup(ItemSetInfo(obsId), testPrefix2).add(position.set("IR3"))
+    val setup = Setup(CommandInfo(obsId), testPrefix2).add(position.set("IR3"))
 
     assemblyController ! Submit(setup)
     //  system.actorOf(AssemblyStatusMatcherActor.props(List(config), Set(assemblyController), self))

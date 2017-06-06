@@ -1,6 +1,6 @@
 package csw.services
 
-import csw.util.itemSet.Events.EventServiceEvent
+import csw.util.param.Events.EventServiceEvent
 
 /**
  * == Event Service ==

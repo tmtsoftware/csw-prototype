@@ -2,7 +2,7 @@ package javacsw.services.ccs.tests;
 
 import akka.actor.*;
 import akka.testkit.javadsl.TestKit;
-import csw.util.itemSet.StringKey;
+import csw.util.param.StringKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

@@ -1,6 +1,6 @@
 package javacsw.util.itemSet;
 
-import csw.util.itemSet.UnitsOfMeasure.*;
+import csw.util.param.UnitsOfMeasure.*;
 
 /**
  * Java API to UnitsOfMeasure

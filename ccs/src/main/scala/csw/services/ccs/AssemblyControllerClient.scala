@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
 import csw.services.ccs.CommandStatus._
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.Parameters.Setup
 
 import scala.concurrent.{Await, Future}
 

@@ -5,8 +5,8 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.LocationService
-import csw.util.itemSet.Events.StatusEvent
-import csw.util.itemSet.{DoubleKey, IntKey, StringKey}
+import csw.util.param.Events.StatusEvent
+import csw.util.param.{DoubleKey, IntKey, StringKey}
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.Await
@@ -54,27 +54,27 @@ class BlockingTelemetryServiceTests
       .add(infoStr.set("info 2"))
 
     bts.publish(event1)
-    bts.get(event1.prefix).get match {
+    bts.get(event1.prefixStr).get match {
       case event: StatusEvent =>
-        assert(event.prefix == event1.prefix)
+        assert(event.prefixStr == event1.prefixStr)
         assert(event(infoValue).head == 1)
         assert(event(infoStr).head == "info 1")
       case _ => fail("Expected a StatusEvent")
     }
 
     bts.publish(event2)
-    bts.get(event2.prefix).get match {
+    bts.get(event2.prefixStr).get match {
       case event: StatusEvent =>
         assert(event(infoValue).head == 2)
         assert(event(infoStr).head == "info 2")
       case _ => fail("Expected a StatusEvent")
     }
 
-    bts.delete(event1.prefix)
-    bts.delete(event2.prefix)
+    bts.delete(event1.prefixStr)
+    bts.delete(event2.prefixStr)
 
-    assert(bts.get(event1.prefix).isEmpty)
-    assert(bts.get(event2.prefix).isEmpty)
+    assert(bts.get(event1.prefixStr).isEmpty)
+    assert(bts.get(event2.prefixStr).isEmpty)
   }
 
   test("Test set, get and getHistory") {

@@ -1,7 +1,7 @@
 package csw.services.ccs
 
 import com.typesafe.scalalogging.LazyLogging
-import csw.util.itemSet.ItemSets.{Observe, SequenceItemSet, Setup, Wait}
+import csw.util.param.Parameters.{Observe, SequenceCommand, Setup, Wait}
 import spray.json._
 
 /**
@@ -102,7 +102,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private val abortedCSType = CommandStatus.Aborted.toString
   private val cancelledCSType = CommandStatus.Cancelled.toString
 
-  import csw.util.itemSet.ItemSetJson._
+  import csw.util.param.ItemSetJson._
 
   private def getMessage(json: JsValue): String = {
     json.asJsObject.getFields(messageKey) match {
@@ -154,10 +154,10 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
     }
   }
 
-  implicit def SequenceConfigJsonFormat: JsonFormat[SequenceItemSet] = new JsonFormat[SequenceItemSet] {
-    override def read(json: JsValue): SequenceItemSet = readSequenceItemSet(json)
+  implicit def SequenceConfigJsonFormat: JsonFormat[SequenceCommand] = new JsonFormat[SequenceCommand] {
+    override def read(json: JsValue): SequenceCommand = readSequenceItemSet(json)
 
-    override def write(obj: SequenceItemSet): JsValue = {
+    override def write(obj: SequenceCommand): JsValue = {
       obj match {
         case sc: Setup   => writeSequenceItemSet(sc)
         case oc: Observe => writeSequenceItemSet(oc)

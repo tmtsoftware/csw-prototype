@@ -1,10 +1,10 @@
 package csw.services.ccs
 
-import csw.util.itemSet.StateVariable.{DemandState, Matcher}
+import csw.util.param.StateVariable.{DemandState, Matcher}
 import akka.actor.{ActorContext, ActorRef}
 import akka.util.Timeout
 import csw.services.loc.LocationService.ResolvedAkkaLocation
-import csw.util.itemSet.{RunId, StateVariable}
+import csw.util.param.{RunId, StateVariable}
 
 import scala.concurrent.duration._
 

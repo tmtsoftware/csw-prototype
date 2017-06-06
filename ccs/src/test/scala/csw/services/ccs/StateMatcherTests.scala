@@ -6,11 +6,11 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.CommandStatus.{CommandResponse, Completed, Error}
 import csw.services.ccs.CurrentStateReceiver.{AddPublisher, RemovePublisher}
-import csw.util.itemSet.ItemSets.ItemSetKey
-import csw.util.itemSet.IntKey
-import csw.util.itemSet.UnitsOfMeasure.encoder
+import csw.util.param.Parameters.Prefix
+import csw.util.param.IntKey
+import csw.util.param.UnitsOfMeasure.encoder
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
-import csw.util.itemSet.StateVariable.{CurrentState, DemandState}
+import csw.util.param.StateVariable.{CurrentState, DemandState}
 import akka.pattern.{ask, pipe}
 import csw.util.akka.PublisherActor.Subscribe
 
@@ -30,12 +30,12 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
   def stateReceiver: ActorRef = system.actorOf(CurrentStateReceiver.props)
 
   val movePrefix = s"WFOS.filter.move"
-  val moveCK: ItemSetKey = movePrefix
+  val moveCK: Prefix = movePrefix
   val posKey = IntKey("position")
   def moveCS(pos: Int): CurrentState = CurrentState(moveCK).add(posKey -> pos withUnits encoder)
 
   val datumPrefix = s"WFOS.filter.datum"
-  val datumCK: ItemSetKey = datumPrefix
+  val datumCK: Prefix = datumPrefix
   // IF a dataum cs is found in the CurrentData then it's successful
   def datumCS() = CurrentState(datumCK)
 

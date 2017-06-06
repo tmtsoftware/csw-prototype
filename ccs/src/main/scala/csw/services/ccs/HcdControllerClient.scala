@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.ActorRef
 import HcdController._
 import csw.util.akka.PublisherActorClient
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.Parameters.Setup
 
 /**
  * A client API for the HcdController actor.

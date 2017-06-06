@@ -4,7 +4,7 @@
  * <strong>Event Publisher</strong>
  * <p>
  * The {@link javacsw.services.event_old.JEventService} class provides the method <code>publish(event)</code> to publish an
- * object of type {@link csw.util.itemSet.Events.EventServiceEvent} (base trait/interface for events).
+ * object of type {@link csw.util.param.Events.EventServiceEvent} (base trait/interface for events).
  * <p>
  * <strong>Event Subscriber</strong>
  * <p>

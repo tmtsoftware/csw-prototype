@@ -1,8 +1,8 @@
 package csw.services.ccs
 
 import csw.services.ccs.Validation.{Validation, ValidationIssue}
-import csw.util.itemSet.ItemSets._
-import csw.util.itemSet.RunId
+import csw.util.param.Parameters._
+import csw.util.param.RunId
 
 object CommandStatus {
 
@@ -12,8 +12,8 @@ object CommandStatus {
   def name: String = this.getClass.getSimpleName.toLowerCase
 
   /**
-    * Trait for a response message from an assembly to a submit or observe request
-    */
+   * Trait for a response message from an assembly to a submit or observe request
+   */
   sealed trait CommandResponse
 
   /**

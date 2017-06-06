@@ -8,9 +8,9 @@ import csw.services.events.EventService.*;
 import static javacsw.util.itemSet.JItems.*;
 
 import csw.services.loc.LocationService;
-import csw.util.itemSet.Events.*;
-import csw.util.itemSet.IntKey;
-import csw.util.itemSet.StringKey;
+import csw.util.param.Events.*;
+import csw.util.param.IntKey;
+import csw.util.param.StringKey;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

@@ -1,13 +1,13 @@
 package csw.services.pkg
 
-import csw.util.itemSet.ItemSets.{ItemSetInfo, Setup}
-import csw.util.itemSet.{ObsId, StringKey}
+import csw.util.param.Parameters.{CommandInfo, Setup}
+import csw.util.param.{ObsId, StringKey}
 
 // XXX TODO: This class is left over from previous versions
 object TestConfig {
 
   val obsId = "TMT-2021A-C-2-1"
-  val itemSetInfo = ItemSetInfo(ObsId(obsId))
+  val itemSetInfo = CommandInfo(ObsId(obsId))
 
   val posName = StringKey("posName")
   val c1 = StringKey("c1")

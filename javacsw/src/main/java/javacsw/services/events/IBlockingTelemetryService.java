@@ -5,7 +5,7 @@ import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.events.TelemetryService;
 import csw.services.events.TelemetryService$;
-import csw.util.itemSet.Events.StatusEvent;
+import csw.util.param.Events.StatusEvent;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,12 +1,12 @@
 package javacsw.util.itemSet.tests;
 
-import csw.util.itemSet.*;
-import csw.util.itemSet.ItemSets.Observe;
-import csw.util.itemSet.ItemSets.Setup;
-import csw.util.itemSet.ItemSets.ItemSetInfo;
-import csw.util.itemSet.Events.ObserveEvent;
-import csw.util.itemSet.Events.StatusEvent;
-import csw.util.itemSet.Events.SystemEvent;
+import csw.util.param.*;
+import csw.util.param.Parameters.Observe;
+import csw.util.param.Parameters.Setup;
+import csw.util.param.Parameters.CommandInfo;
+import csw.util.param.Events.ObserveEvent;
+import csw.util.param.Events.StatusEvent;
+import csw.util.param.Events.SystemEvent;
 import javacsw.util.itemSet.JItems;
 import javacsw.util.itemSet.JSubsystem;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class JJSONTests {
   private static final String ck2 = "wfos.red.filter";
   private static final String ck3 = "wfos.red.detector";
 
-  private static final ItemSets.ItemSetInfo info = new ItemSetInfo("Obs001");
+  private static final Parameters.CommandInfo info = new CommandInfo("Obs001");
 
 
   @Test
@@ -50,70 +50,70 @@ public class JJSONTests {
     // char item encode/decode
     {
       CharKey k1 = CharKey(s3);
-      CharItem i1 = jset(k1, 'd');
+      CharParameter i1 = jset(k1, 'd');
       JsValue j1 = ItemSetJson.charItemFormat().write(i1);
-      CharItem in1 = ItemSetJson.charItemFormat().read(j1);
+      CharParameter in1 = ItemSetJson.charItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // short item encode/decode
     {
       ShortKey k1 = ShortKey(s3);
       short s = -1;
-      ShortItem i1 = jset(k1, s).withUnits(none);
+      ShortParameter i1 = jset(k1, s).withUnits(none);
       JsValue j1 = ItemSetJson.shortItemFormat().write(i1);
-      ShortItem in1 = ItemSetJson.shortItemFormat().read(j1);
+      ShortParameter in1 = ItemSetJson.shortItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // int item encode/decode
     {
       IntKey k1 = IntKey(s3);
       int i = -1;
-      IntItem i1 = jset(k1, i).withUnits(none);
+      IntParameter i1 = jset(k1, i).withUnits(none);
       JsValue j1 = ItemSetJson.intItemFormat().write(i1);
-      IntItem in1 = ItemSetJson.intItemFormat().read(j1);
+      IntParameter in1 = ItemSetJson.intItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // long item encode/decode
     {
       LongKey k1 = LongKey(s3);
       long l = 123456L;
-      LongItem i1 = jset(k1, l).withUnits(none);
+      LongParameter i1 = jset(k1, l).withUnits(none);
       JsValue j1 = ItemSetJson.longItemFormat().write(i1);
-      LongItem in1 = ItemSetJson.longItemFormat().read(j1);
+      LongParameter in1 = ItemSetJson.longItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // float item encode/decode
     {
       FloatKey k1 = FloatKey(s3);
       float f = 123.456f;
-      FloatItem i1 = jset(k1, f).withUnits(none);
+      FloatParameter i1 = jset(k1, f).withUnits(none);
       JsValue j1 = ItemSetJson.floatItemFormat().write(i1);
-      FloatItem in1 = ItemSetJson.floatItemFormat().read(j1);
+      FloatParameter in1 = ItemSetJson.floatItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // double item encode/decode
     {
       DoubleKey k1 = new DoubleKey(s3);
       double f = 123.456;
-      DoubleItem i1 = jset(k1, f).withUnits(none);
+      DoubleParameter i1 = jset(k1, f).withUnits(none);
       JsValue j1 = ItemSetJson.doubleItemFormat().write(i1);
-      DoubleItem in1 = ItemSetJson.doubleItemFormat().read(j1);
+      DoubleParameter in1 = ItemSetJson.doubleItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // boolean item encode/decode
     {
       BooleanKey k1 = new BooleanKey(s3);
-      BooleanItem i1 = jset(k1, true, false).withUnits(none);
+      BooleanParameter i1 = jset(k1, true, false).withUnits(none);
       JsValue j1 = ItemSetJson.booleanItemFormat().write(i1);
-      BooleanItem in1 = ItemSetJson.booleanItemFormat().read(j1);
+      BooleanParameter in1 = ItemSetJson.booleanItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // string item encode/decode
     {
       StringKey k1 = new StringKey(s3);
-      StringItem i1 = jset(k1, "Blue", "Green").withUnits(none);
+      StringParameter i1 = jset(k1, "Blue", "Green").withUnits(none);
       JsValue j1 = ItemSetJson.stringItemFormat().write(i1);
-      StringItem in1 = ItemSetJson.stringItemFormat().read(j1);
+      StringParameter in1 = ItemSetJson.stringItemFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
   }
@@ -133,13 +133,13 @@ public class JJSONTests {
     BooleanKey k6 = new BooleanKey("f");
     StringKey k7 = new StringKey("g");
 
-    CharItem i1 = jset(k1, 'd').withUnits(none);
-    IntItem i2 = jset(k2, 22).withUnits(none);
-    LongItem i3 = jset(k3, 1234L).withUnits(none);
-    FloatItem i4 = jset(k4, 123.45f).withUnits(degrees);
-    DoubleItem i5 = jset(k5, 123.456).withUnits(meters);
-    BooleanItem i6 = jset(k6, false);
-    StringItem i7 = jset(k7, "GG495").withUnits(degrees);
+    CharParameter i1 = jset(k1, 'd').withUnits(none);
+    IntParameter i2 = jset(k2, 22).withUnits(none);
+    LongParameter i3 = jset(k3, 1234L).withUnits(none);
+    FloatParameter i4 = jset(k4, 123.45f).withUnits(degrees);
+    DoubleParameter i5 = jset(k5, 123.456).withUnits(meters);
+    BooleanParameter i6 = jset(k6, false);
+    StringParameter i7 = jset(k7, "GG495").withUnits(degrees);
 
     // Should encode/decode a Setup
     {
@@ -194,7 +194,7 @@ public class JJSONTests {
     DoubleMatrixKey k1 = DoubleMatrixKey("myMatrix");
     double[][] mIn = {{1.0, 2.0, 3.0}, {4.1, 5.1, 6.1}, {7.2, 8.2, 9.2}};
     DoubleMatrix m1 = DoubleMatrix(mIn);
-    DoubleMatrixItem di = jset(k1, m1);
+    DoubleMatrixParameter di = jset(k1, m1);
     Setup sc1 = new Setup(info, ck).add(di);
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);

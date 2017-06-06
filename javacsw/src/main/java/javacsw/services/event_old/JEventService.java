@@ -2,7 +2,7 @@ package javacsw.services.event_old;
 
 import csw.services.event_old.EventService;
 import csw.services.event_old.EventServiceSettings;
-import csw.util.itemSet.Events.EventServiceEvent;
+import csw.util.param.Events.EventServiceEvent;
 import scala.concurrent.duration.FiniteDuration;
 
 /**

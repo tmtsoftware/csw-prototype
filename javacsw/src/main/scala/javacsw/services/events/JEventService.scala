@@ -8,7 +8,7 @@ import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventService, EventServiceSettings}
 import csw.services.loc.LocationService.ResolvedTcpLocation
-import csw.util.itemSet.Events.EventServiceEvent
+import csw.util.param.Events.EventServiceEvent
 
 import scala.compat.java8.FutureConverters._
 

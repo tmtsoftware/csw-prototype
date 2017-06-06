@@ -11,7 +11,7 @@ import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.ContainerComponent
-import csw.util.itemSet.ItemSets.Setup
+import csw.util.param.Parameters.Setup
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

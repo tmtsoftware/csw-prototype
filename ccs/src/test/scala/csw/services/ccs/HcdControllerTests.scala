@@ -4,9 +4,9 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.util.itemSet.ItemSets.{ItemSetInfo, Setup}
-import csw.util.itemSet.StateVariable.CurrentState
-import csw.util.itemSet.{ObsId, StringKey}
+import csw.util.param.Parameters.{CommandInfo, Setup}
+import csw.util.param.StateVariable.CurrentState
+import csw.util.param.{ObsId, StringKey}
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
@@ -75,7 +75,7 @@ object HcdControllerTests {
 
       case WorkDone(config) =>
         log.debug(s"Done processing $config")
-        currentState = CurrentState(config.prefix, config.items)
+        currentState = CurrentState(config.prefixStr, config.items)
         context.parent ! currentState
 
       case x => log.error(s"Unexpected message $x")
@@ -99,7 +99,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val info = ItemSetInfo(ObsId("001"))
+    val info = CommandInfo(ObsId("001"))
     val config = Setup(info, testPrefix).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))

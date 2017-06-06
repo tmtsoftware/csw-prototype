@@ -4,10 +4,10 @@ import akka.actor.ActorSystem;
 import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
-import csw.util.itemSet.DoubleKey;
-import csw.util.itemSet.Events.*;
-import csw.util.itemSet.IntKey;
-import csw.util.itemSet.StringKey;
+import csw.util.param.DoubleKey;
+import csw.util.param.Events.*;
+import csw.util.param.IntKey;
+import csw.util.param.StringKey;
 import javacsw.services.events.ITelemetryService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -71,13 +71,13 @@ public class JTelemetryServiceTest {
 
     ts.publish(event1).get();
     StatusEvent val1 = ts.get(prefix1).get().get();
-    assertEquals(val1.prefix(), prefix1);
+    assertEquals(val1.prefixStr(), prefix1);
     assertEquals(val1.get(infoValue).get().head(), 1);
     assertEquals(val1.get(infoStr).get().head(), "info 1");
 
     ts.publish(event2).get();
     StatusEvent val2 = ts.get(prefix2).get().get();
-    assertEquals(val2.prefix(), prefix2);
+    assertEquals(val2.prefixStr(), prefix2);
     assertEquals(val2.get(infoValue).get().head(), 2);
     assertEquals(val2.get(infoStr).get().head(), "info 2");
 
