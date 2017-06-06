@@ -11,10 +11,13 @@ object CommandStatus {
    */
   def name: String = this.getClass.getSimpleName.toLowerCase
 
+  /**
+    * Trait for a response message from an assembly to a submit or observe request
+    */
   sealed trait CommandResponse
 
   /**
-   * The configuration or set of configurations was not valid before starting
+   * The configuration was not valid before starting
    * @param issue an issue that caused the input configuration to be invalid
    */
   final case class Invalid(issue: ValidationIssue) extends CommandResponse
@@ -42,7 +45,7 @@ object CommandStatus {
   }
 
   /**
-   * The configuration or set of configurations was valid and started
+   * The configuration was valid and started
    */
   case object Accepted extends CommandResponse
 
