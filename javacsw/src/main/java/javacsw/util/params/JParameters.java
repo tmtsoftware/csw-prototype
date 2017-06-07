@@ -993,7 +993,7 @@ public class JParameters {
   }
 
   /**
-   * jgetItem returns an Item as an Optional.  The Optional is empty if the item is not present.
+   * jgetParameter returns an Item as an Optional.  The Optional is empty if the item is not present.
    *
    * @param sc  The configuration to use to search for the item
    * @param key The key for the item to be located
@@ -1002,11 +1002,11 @@ public class JParameters {
    * @param <T> The type of the configuration setup
    * @return Optional item
    */
-  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> Optional<I> jgetItem(T sc, Key<S, I> key) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> Optional<I> jgetParameter(T sc, Key<S, I> key) {
     return JavaHelpers.jget(sc, key);
   }
 
-  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> I jitem(T sc, Key<S, I> key) {
+  public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> I jparameter(T sc, Key<S, I> key) {
     Optional<I> item = JavaHelpers.jget(sc, key);
     // While Optional will throw its own exception, I choose to check and throw my own with hopefully a better message.
     if (item.isPresent()) {

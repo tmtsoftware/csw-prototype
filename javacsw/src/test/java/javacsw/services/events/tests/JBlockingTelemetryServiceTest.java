@@ -104,7 +104,7 @@ public class JBlockingTelemetryServiceTest {
     Optional<StatusEvent> v = bts.get(prefix);
     assertTrue(v.isPresent());
     StatusEvent ev = v.get();
-    Double expTime = jvalue(jitem(ev, exposureTime));
+    Double expTime = jvalue(jparameter(ev, exposureTime));
     assertTrue(expTime == 7.0);
 
     List<StatusEvent> h = bts.getHistory(prefix, n + 1);

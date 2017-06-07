@@ -39,8 +39,8 @@ public class JParameterSetDslTests {
     assertTrue(sc1.size() == 2);
     assertTrue(sc1.exists(k1));
     assertTrue(sc1.exists(k2));
-    assertTrue(jvalue(jitem(sc1, k1)).equals(22));
-    assertEquals(jvalues(jitem(sc1, k2)), Collections.singletonList(44));
+    assertTrue(jvalue(jparameter(sc1, k1)).equals(22));
+    assertEquals(jvalues(jparameter(sc1, k2)), Collections.singletonList(44));
   }
 
   @Test
@@ -50,9 +50,9 @@ public class JParameterSetDslTests {
     Setup sc1 = jadd(setup(info, ck3), jset(k4, dm1));
     assertTrue(sc1.size() == 1);
     assertTrue(sc1.exists(k4));
-    assertEquals(jvalue(jitem(sc1, k4)), dm1);
-    assertTrue(jvalue(jitem(sc1, k4)).data()[0][0] == 1);
-    assertTrue(jvalue(jitem(sc1, k4)).apply(0, 0) == 1);
+    assertEquals(jvalue(jparameter(sc1, k4)), dm1);
+    assertTrue(jvalue(jparameter(sc1, k4)).data()[0][0] == 1);
+    assertTrue(jvalue(jparameter(sc1, k4)).apply(0, 0) == 1);
   }
 
   @Test
@@ -61,8 +61,8 @@ public class JParameterSetDslTests {
     assertTrue(oc1.size() == 2);
     assertTrue(oc1.exists(k1));
     assertTrue(oc1.exists(k2));
-    assertTrue(jvalue(jitem(oc1, k1)).equals(22));
-    assertEquals(jvalues(jitem(oc1, k2)), Collections.singletonList(44));
+    assertTrue(jvalue(jparameter(oc1, k1)).equals(22));
+    assertEquals(jvalues(jparameter(oc1, k2)), Collections.singletonList(44));
   }
 }
 

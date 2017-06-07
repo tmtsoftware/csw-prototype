@@ -42,8 +42,8 @@ public class JParameterSetTests {
     assertTrue(sc1.size() == 2);
     assertTrue(sc1.exists(k1));
     assertTrue(sc1.exists(k2));
-    assertTrue(jvalue(jitem(sc1, k1)).equals(22));
-    assertEquals(jvalues(jitem(sc1, k2)), Collections.singletonList(44));
+    assertTrue(jvalue(jparameter(sc1, k1)).equals(22));
+    assertEquals(jvalues(jparameter(sc1, k2)), Collections.singletonList(44));
   }
 
   @Test
@@ -57,9 +57,9 @@ public class JParameterSetTests {
     assertEquals(sc1.size(), 2);
 
     // Check for two present and one not present
-    assertTrue(jgetItem(sc1, k1).isPresent());
-    assertTrue(jgetItem(sc1, k2).isPresent());
-    assertFalse(jgetItem(sc1, k3).isPresent());
+    assertTrue(jgetParameter(sc1, k1).isPresent());
+    assertTrue(jgetParameter(sc1, k2).isPresent());
+    assertFalse(jgetParameter(sc1, k3).isPresent());
   }
 
   @Test
@@ -76,13 +76,13 @@ public class JParameterSetTests {
     sc1 = jadd(sc1, i1, i2);
     assertTrue(sc1.size() == 2);
 
-    assertTrue(jitem(sc1, k1).equals(i1));
-    assertTrue(jitem(sc1, k2).equals(i2));
+    assertTrue(jparameter(sc1, k1).equals(i1));
+    assertTrue(jparameter(sc1, k2).equals(i2));
 
     // Test for exception thrown for non present lookup
     boolean exFlag = false;
     try {
-      StringParameter si = jitem(sc1, k3);
+      StringParameter si = jparameter(sc1, k3);
     } catch (NoSuchElementException ex) {
       exFlag = true;
     }
@@ -98,8 +98,8 @@ public class JParameterSetTests {
     IntKey k3 = IntKey("NotPresent");
 
     sc1 = jadd(sc1, jset(k1, 22, 44, 66), jset(k2, 1., 2., 3., 4.));
-    assertTrue(jget(sc1, k1, 0).isPresent() && jvalue(jitem(sc1, k1), 0).equals(22));
-    assertTrue(jget(sc1, k2, 1).isPresent() && jvalue(jitem(sc1, k2), 1).equals(2.));
+    assertTrue(jget(sc1, k1, 0).isPresent() && jvalue(jparameter(sc1, k1), 0).equals(22));
+    assertTrue(jget(sc1, k2, 1).isPresent() && jvalue(jparameter(sc1, k2), 1).equals(2.));
     assertFalse(jget(sc1, k3, 2).isPresent());
   }
 
@@ -115,8 +115,8 @@ public class JParameterSetTests {
       assertTrue(sc1.size() == 2);
       assertTrue(sc1.exists(k1));
       assertTrue(sc1.exists(k2));
-      assertTrue(jvalue(jitem(sc1, k1)).equals(22));
-      int xx = jvalue(jitem(sc1, k2));
+      assertTrue(jvalue(jparameter(sc1, k1)).equals(22));
+      int xx = jvalue(jparameter(sc1, k2));
       assertTrue(xx == 44);
     }
 
@@ -133,8 +133,8 @@ public class JParameterSetTests {
       Setup sc1 = new Setup(info, ck1);
       sc1 = jadd(sc1, jset(k1, 22));
       sc1 = jadd(sc1, jset(k2, 44));
-      List<Integer> v1 = jvalues(jitem(sc1, k1));
-      List<Integer> v2 = jvalues(jitem(sc1, k2));
+      List<Integer> v1 = jvalues(jparameter(sc1, k1));
+      List<Integer> v2 = jvalues(jparameter(sc1, k2));
       System.out.println("V1: " + v1);
       System.out.println("V2: " + v2);
       assertTrue(v1.equals(Collections.singletonList(22)));
@@ -151,7 +151,7 @@ public class JParameterSetTests {
     Setup sc1 = new Setup(info, ck1);
     sc1 = JParameters.jadd(sc1, jset(encoder, Arrays.asList(100, 200)));
 
-    assertTrue(jvalue(jitem(sc1, encoder)).equals(100));
+    assertTrue(jvalue(jparameter(sc1, encoder)).equals(100));
     System.out.println("ONE: " + jget(sc1, encoder, 0));
     assertTrue(jget(sc1, encoder, 0).equals(Optional.of(100)));
     assertTrue(jget(sc1, encoder, 1).equals(Optional.of(200)));
@@ -159,7 +159,7 @@ public class JParameterSetTests {
     sc1 = JParameters.jadd(sc1, jset(encoder, 100, 1000, 1000));
     System.out.println("SC1: " + sc1);
 
-    List<Integer> x1 = jvalues(jitem(sc1, encoder));
+    List<Integer> x1 = jvalues(jparameter(sc1, encoder));
     System.out.println("X1: " + x1);
   }
 
@@ -196,11 +196,11 @@ public class JParameterSetTests {
     assertTrue(sc1.size() == 2);
 
     // Two should be present, but the last is not
-    assertTrue(jgetItem(sc1, encoder).get().equals(iitem));
-    assertTrue(jgetItem(sc1, filter).get().equals(sitem));
-    assertTrue(jgetItem(sc1, notpresent).equals(Optional.empty()));
+    assertTrue(jgetParameter(sc1, encoder).get().equals(iitem));
+    assertTrue(jgetParameter(sc1, filter).get().equals(sitem));
+    assertTrue(jgetParameter(sc1, notpresent).equals(Optional.empty()));
 
-    assertTrue(jvalue(jitem(sc1, encoder), 1).equals(2));
+    assertTrue(jvalue(jparameter(sc1, encoder), 1).equals(2));
   }
 
   @Test

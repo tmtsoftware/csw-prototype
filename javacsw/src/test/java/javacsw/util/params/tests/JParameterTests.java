@@ -954,9 +954,9 @@ public class JParameterTests {
     assertEquals(citem.size(), 1);
     Struct s = jvalue(citem);
     assertEquals(s.size(), 3);
-    assertEquals(jvalue(jitem(s, ra)), "12:13:14.1");
-    assertEquals(jvalue(jitem(s, dec)), "32:33:34.4");
-    assertEquals(jvalue(jitem(s, epoch)), 1950.0, 0.001);
+    assertEquals(jvalue(jparameter(s, ra)), "12:13:14.1");
+    assertEquals(jvalue(jparameter(s, dec)), "32:33:34.4");
+    assertEquals(jvalue(jparameter(s, epoch)), 1950.0, 0.001);
   }
 }
 

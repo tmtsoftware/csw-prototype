@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.util.params.JParameters.*;
-import static javacsw.util.params.JParameters.jitem;
+import static javacsw.util.params.JParameters.jparameter;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -103,7 +103,7 @@ public class JTelemetryServiceTest {
     Optional<StatusEvent> v = ts.get(prefix).get();
     assertTrue(v.isPresent());
     StatusEvent ev = v.get();
-    Double expTime = jvalue(jitem(ev, exposureTime));
+    Double expTime = jvalue(jparameter(ev, exposureTime));
     assertTrue(expTime == 7.0);
 
     List<StatusEvent> h = ts.getHistory(prefix, n + 1).get();

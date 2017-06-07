@@ -35,7 +35,7 @@
  * <p>
  * <strong>Key Types</strong>
  * <p>
- * A set of standard key types and matching items are defined. Each key accepts one or more values
+ * A set of standard key types and matching parameters are defined. Each key accepts one or more values
  * of the given type. The values are stored internally in a Vector:
  * <ul>
  * <li>IntKey</li>
