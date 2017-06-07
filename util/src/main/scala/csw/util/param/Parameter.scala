@@ -122,7 +122,7 @@ abstract class Key[S, I <: Parameter[S]](val keyName: String) extends Serializab
    * Sets the value and units for the key
    * This definition enables writing code like this (see [[ParameterSetDsl]]):
    * {{{
-   *   val setupConfig = sc(
+   *   val setup = sc(
    *    prefix,
    *     key1 -> (value1, units1),
    *     key2 -> (value2, units2)
@@ -138,7 +138,7 @@ abstract class Key[S, I <: Parameter[S]](val keyName: String) extends Serializab
    * Sets the values for the key as a Scala Vector
    * This definition enables writing code like this (see [[ParameterSetDsl]]):
    * {{{
-   *   val setupConfig = sc(prefix,
+   *   val setup = sc(prefix,
    *     key1 -> Vector(...),
    *     key2 -> Vector(...)
    *   )
