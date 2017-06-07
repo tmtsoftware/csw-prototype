@@ -25,7 +25,7 @@
  *      }
  *
  *      // Send the config to the worker for processing
- *      public void process(SetupConfig config) {
+ *      public void process(Setup config) {
  *          worker.tell(config, self());
  *      }
  *

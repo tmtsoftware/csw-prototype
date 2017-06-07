@@ -14,8 +14,8 @@ There are a variety of similar classes, used for different purposes:
 
 Configurations:
 
-* SetupConfig
-* ObserveConfig
+* Setup
+* Observe
 
 Events:
 
@@ -84,7 +84,7 @@ Example:
 
   // ...
 
-    val config = SetupConfig(prefix)
+    val config = Setup(prefix)
       .add(eventNum.set(num))
       .add(exposureTime.set(1.0))
       .add(imageData.set(testImageData))
@@ -122,13 +122,13 @@ Java Example:
 
     // ...
 
-      SetupConfig config = new SetupConfig(prefix)
+      Setup config = new Setup(prefix)
         .add(jset(eventNum, num))
         .add(jset(exposureTime, 1.0))
         .add(jset(imageData, testImageData));
 
       // Alternative syntax
-      SetupConfig config = jadd(sc(prefix,
+      Setup config = jadd(sc(prefix,
         jset(eventNum, num),
         jset(exposureTime, 1.0),
         jset(imageData, testImageData));
@@ -148,7 +148,7 @@ Java Example:
    final DoubleMatrixKey k1 = DoubleMatrixKey("matrixTest");
    double[][] m1 = {{1., 2., 3.}, {4., 5., 6.}, {7., 8., 9.}};
    DoubleMatrix dm1 = DoubleMatrix(m1);
-   SetupConfig sc1 = jadd(sc("test"), jset(k1, dm1));
+   Setup sc1 = jadd(sc("test"), jset(k1, dm1));
    assertTrue(jvalue(jitem(sc1, k1)).apply(0, 0) == 1);
 ```
 
@@ -163,9 +163,9 @@ In some cases you may need to wrap multiple configs, for example to pass to an a
     val yOffset = IntKey("yOffset")
     val obsId = "Obs001"
 
-    val sc1 = SetupConfig(ck1).madd(encoder1.set(22), encoder2.set(33))
-    val sc2 = SetupConfig(ck1).madd(xOffset.set(1), yOffset.set(2))
-    val configArg = SetupConfigArg(obsId, sc1, sc2)
+    val sc1 = Setup(ck1).madd(encoder1.set(22), encoder2.set(33))
+    val sc2 = Setup(ck1).madd(xOffset.set(1), yOffset.set(2))
+    val configArg = SetupArg(obsId, sc1, sc2)
     
     assert(configArg.info.obsId.obsId == obsId)
     assert(configArg.configs.toList == List(sc1, sc2))
@@ -180,9 +180,9 @@ Java API:
     IntKey yOffset = IntKey("yOffset");
     String obsId = "Obs001";
     
-    SetupConfig sc1 = jadd(sc(ck1), jset(encoder1, 22), jset(encoder2, 33));
-    SetupConfig sc2 = jadd(sc(ck1), jset(xOffset, 1), jset(yOffset, 2));
-    SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
+    Setup sc1 = jadd(sc(ck1), jset(encoder1, 22), jset(encoder2, 33));
+    Setup sc2 = jadd(sc(ck1), jset(xOffset, 1), jset(yOffset, 2));
+    SetupArg configArg = Configurations.createSetupArg(obsId, sc1, sc2);
     
     assertTrue(configArg.info().obsId().obsId().equals(obsId));
     assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));

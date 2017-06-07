@@ -11,8 +11,8 @@ object Validation {
   // Returned when a configuration is missing a required key/item
   final case class MissingKeyIssue(reason: String) extends ValidationIssue
 
-  // Returned when an Assembly receives a configuration with a ConfigKey/Prefix that it doesn't support
-  final case class WrongConfigKeyIssue(reason: String) extends ValidationIssue
+  // Returned when an Assembly receives a configuration with a Prefix that it doesn't support
+  final case class WrongPrefixIssue(reason: String) extends ValidationIssue
 
   // Returned when the item for a key is not the correct type (i.e. int vs double, etc.)
   final case class WrongItemTypeIssue(reason: String) extends ValidationIssue

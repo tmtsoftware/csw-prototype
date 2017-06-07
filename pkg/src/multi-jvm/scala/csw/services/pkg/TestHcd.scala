@@ -47,7 +47,7 @@ object TestWorker {
 }
 
 
-//class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
+//class TestWorker(demand: Setup) extends Actor with ActorLogging {
 class TestWorker(demand: Setup, prefix: String) extends Actor with ActorLogging {
 
   import TestWorker._

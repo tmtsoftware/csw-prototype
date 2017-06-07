@@ -7,7 +7,7 @@ import csw.util.param.{ObsId, StringKey}
 object TestConfig {
 
   val obsId = "TMT-2021A-C-2-1"
-  val itemSetInfo = CommandInfo(ObsId(obsId))
+  val commandInfo = CommandInfo(ObsId(obsId))
 
   val posName = StringKey("posName")
   val c1 = StringKey("c1")
@@ -15,13 +15,13 @@ object TestConfig {
   val equinox = StringKey("equinox")
 
   // Configs to use for testing
-  val testConfig1: Setup = Setup(itemSetInfo, "tcs.base.pos").madd(
+  val testConfig1: Setup = Setup(commandInfo, "tcs.base.pos").madd(
     posName.set("NGC738B"),
     c1.set("22:35:58.530"),
     c2.set("33:57:55.40"),
     equinox.set("J2000"))
 
-  val testConfig2: Setup = Setup(itemSetInfo, "tcs.ao.pos.one")
+  val testConfig2: Setup = Setup(commandInfo, "tcs.ao.pos.one")
     .add(posName.set("NGC738B"))
     .add(c1.set("22:36:01.066"))
     .add(c2.set("33:58:21.69"))

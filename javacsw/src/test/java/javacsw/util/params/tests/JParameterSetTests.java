@@ -1,14 +1,14 @@
-package javacsw.util.itemSet.tests;
+package javacsw.util.params.tests;
 
 import csw.util.param.*;
 import csw.util.param.Parameters.*;
-import javacsw.util.itemSet.JItems;
-import javacsw.util.itemSet.JUnitsOfMeasure;
+import javacsw.util.params.JParameters;
+import javacsw.util.params.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;
 
-import static javacsw.util.itemSet.JItems.*;
+import static javacsw.util.params.JParameters.*;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -34,7 +34,7 @@ public class JParameterSetTests {
 
   @Test
   public void testJMAdd() {
-    Setup sc1 = JItems.Setup(info, ck3);
+    Setup sc1 = JParameters.Setup(info, ck3);
     IntKey k1 = IntKey("encoder");
     IntKey k2 = IntKey("windspeed");
 
@@ -48,7 +48,7 @@ public class JParameterSetTests {
 
   @Test
   public void testJGetItem() {
-    Setup sc1 = JItems.Setup(info, ck3);
+    Setup sc1 = JParameters.Setup(info, ck3);
     IntKey k1 = IntKey("encoder");
     IntKey k2 = IntKey("windspeed");
     StringKey k3 = StringKey("notpresent");
@@ -64,7 +64,7 @@ public class JParameterSetTests {
 
   @Test
   public void testJItem() {
-    Setup sc1 = JItems.Setup(info, ck3);
+    Setup sc1 = JParameters.Setup(info, ck3);
     IntKey k1 = IntKey("encoder");
     IntKey k2 = IntKey("windspeed");
     StringKey k3 = StringKey("notpresent");
@@ -92,7 +92,7 @@ public class JParameterSetTests {
 
   @Test
   public void testJGetFunction() {
-    Setup sc1 = JItems.Setup(info, ck3);
+    Setup sc1 = JParameters.Setup(info, ck3);
     IntKey k1 = IntKey("encoder");
     DoubleKey k2 = DoubleKey("windspeed");
     IntKey k3 = IntKey("NotPresent");
@@ -110,7 +110,7 @@ public class JParameterSetTests {
 
     // It "Should allow adding keys")
     {
-      Setup sc1 = JItems.Setup(info,ck3);
+      Setup sc1 = JParameters.Setup(info,ck3);
       sc1 = sc1.add(jset(k1, 22)).add(jset(k2, 44));
       assertTrue(sc1.size() == 2);
       assertTrue(sc1.exists(k1));
@@ -149,14 +149,14 @@ public class JParameterSetTests {
     StringKey filter = new StringKey("filter");
 
     Setup sc1 = new Setup(info, ck1);
-    sc1 = JItems.jadd(sc1, jset(encoder, Arrays.asList(100, 200)));
+    sc1 = JParameters.jadd(sc1, jset(encoder, Arrays.asList(100, 200)));
 
     assertTrue(jvalue(jitem(sc1, encoder)).equals(100));
     System.out.println("ONE: " + jget(sc1, encoder, 0));
     assertTrue(jget(sc1, encoder, 0).equals(Optional.of(100)));
     assertTrue(jget(sc1, encoder, 1).equals(Optional.of(200)));
 
-    sc1 = JItems.jadd(sc1, jset(encoder, 100, 1000, 1000));
+    sc1 = JParameters.jadd(sc1, jset(encoder, 100, 1000, 1000));
     System.out.println("SC1: " + sc1);
 
     List<Integer> x1 = jvalues(jitem(sc1, encoder));
@@ -170,7 +170,7 @@ public class JParameterSetTests {
     IntParameter iitem = jset(encoder, Arrays.asList(1, 2, 3));
     StringParameter sitem = jset(filter, Arrays.asList("A", "B", "C"));
 
-    Setup sc1 = JItems.Setup(info, ck1);
+    Setup sc1 = JParameters.Setup(info, ck1);
     sc1 = jadd(sc1, iitem, sitem);
     assertTrue(sc1.size() == 2);
     assertTrue(sc1.exists(encoder));
@@ -187,8 +187,8 @@ public class JParameterSetTests {
     StringKey filter = new StringKey("filter");
     IntKey notpresent = new IntKey("notpresent");
 
-    IntParameter iitem = JItems.jset(encoder, Arrays.asList(1, 2, 3));
-    StringParameter sitem = JItems.jset(filter, Arrays.asList("A", "B", "C"));
+    IntParameter iitem = JParameters.jset(encoder, Arrays.asList(1, 2, 3));
+    StringParameter sitem = JParameters.jset(filter, Arrays.asList("A", "B", "C"));
 
     // Add two items, but not the third
     Setup sc1 = new Setup(info, ck1);
@@ -219,7 +219,7 @@ public class JParameterSetTests {
     System.out.println("Remove: " + sc1);
     assertTrue(sc1.size() == 1);
 
-    sc1 = JItems.jremove(sc1, filter);
+    sc1 = JParameters.jremove(sc1, filter);
     System.out.println("Remove2: " + sc1);
     assertTrue(sc1.size() == 0);
   }

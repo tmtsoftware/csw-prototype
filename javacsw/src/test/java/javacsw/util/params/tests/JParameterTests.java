@@ -1,13 +1,13 @@
-package javacsw.util.itemSet.tests;
+package javacsw.util.params.tests;
 
 import csw.util.param.*;
-import javacsw.util.itemSet.JItems;
-import javacsw.util.itemSet.JUnitsOfMeasure;
+import javacsw.util.params.JParameters;
+import javacsw.util.params.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;
 
-import static javacsw.util.itemSet.JItems.*;
+import static javacsw.util.params.JParameters.*;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -489,10 +489,10 @@ public class JParameterTests {
     List<Integer> lv = jvalues(a);
     assertEquals(lv, Arrays.asList(1, 2, 3));
 
-    IntParameter b = JItems.jset(encoder1, 100, 200);
+    IntParameter b = JParameters.jset(encoder1, 100, 200);
     assertEquals(jvalues(b), Arrays.asList(100, 200));
 
-    b = JItems.jset(encoder1, Arrays.asList(100, 200), JUnitsOfMeasure.degrees);
+    b = JParameters.jset(encoder1, Arrays.asList(100, 200), JUnitsOfMeasure.degrees);
     assertEquals(jvalues(b), Arrays.asList(100, 200));
   }
 

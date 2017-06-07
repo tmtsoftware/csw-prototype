@@ -7,7 +7,7 @@
 //import csw.services.ccs.PeriodicHcdControllerTests.TestPeriodicHcdController
 //import csw.services.events._
 //import csw.services.log.PrefixedActorLogging
-//import csw.util.config.Configurations.SetupConfig
+//import csw.util.config.Configurations.Setup
 //import csw.util.config.StringKey
 //import org.scalatest.FunSuiteLike
 //
@@ -48,7 +48,7 @@
 //    def props(): Props = Props(classOf[TestWorker])
 //
 //    // Message sent to self to simulate work done
-//    case class WorkDone(config: SetupConfig)
+//    case class WorkDone(config: Setup)
 //
 //  }
 //
@@ -63,11 +63,11 @@
 //    val position = StringKey("position")
 //
 //    // Simulate getting the initial state from the device and publishing to the event service
-//    val initialState = SetupConfig(testPrefix).add(position.set("None"))
+//    val initialState = Setup(testPrefix).add(position.set("None"))
 //    svs.set(initialState)
 //
 //    def receive: Receive = {
-//      case config: SetupConfig =>
+//      case config: Setup =>
 //        // Update the demand state variable
 //        svs.setDemand(config)
 //        // Simulate doing work
@@ -101,7 +101,7 @@
 //    hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 //
 //    // Send a setup config to the HCD
-//    val config = SetupConfig(PeriodicHcdControllerTests.testPrefix).add(PeriodicHcdControllerTests.position.set("IR2"))
+//    val config = Setup(PeriodicHcdControllerTests.testPrefix).add(PeriodicHcdControllerTests.position.set("IR2"))
 //    hcdController ! Submit(config)
 //    system.actorOf(StateVariableMatcherActor.props(List(config), self))
 //    within(10.seconds) {

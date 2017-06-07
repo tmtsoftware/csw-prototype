@@ -1,4 +1,4 @@
-package javacsw.util.itemSet.tests;
+package javacsw.util.params.tests;
 
 import csw.util.param.*;
 import csw.util.param.Parameters.Observe;
@@ -7,15 +7,15 @@ import csw.util.param.Parameters.CommandInfo;
 import csw.util.param.Events.ObserveEvent;
 import csw.util.param.Events.StatusEvent;
 import csw.util.param.Events.SystemEvent;
-import javacsw.util.itemSet.JItems;
-import javacsw.util.itemSet.JSubsystem;
+import javacsw.util.params.JParameters;
+import javacsw.util.params.JSubsystem;
 import org.junit.Test;
 import spray.json.JsValue;
 
 import java.util.Arrays;
 
-import static javacsw.util.itemSet.JItems.*;
-import static javacsw.util.itemSet.JUnitsOfMeasure.*;
+import static javacsw.util.params.JParameters.*;
+import static javacsw.util.params.JUnitsOfMeasure.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -40,8 +40,8 @@ public class JJSONTests {
     Subsystem wfos = JSubsystem.WFOS;
 
     // should encode and decode
-    JsValue json = ItemSetJson.subsystemFormat().write(wfos);
-    Subsystem sub = ItemSetJson.subsystemFormat().read(json);
+    JsValue json = ParameterSetJson.subsystemFormat().write(wfos);
+    Subsystem sub = ParameterSetJson.subsystemFormat().read(json);
     assertTrue(sub.equals(wfos));
   }
 
@@ -51,8 +51,8 @@ public class JJSONTests {
     {
       CharKey k1 = CharKey(s3);
       CharParameter i1 = jset(k1, 'd');
-      JsValue j1 = ItemSetJson.charItemFormat().write(i1);
-      CharParameter in1 = ItemSetJson.charItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.charParameterFormat().write(i1);
+      CharParameter in1 = ParameterSetJson.charParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // short item encode/decode
@@ -60,8 +60,8 @@ public class JJSONTests {
       ShortKey k1 = ShortKey(s3);
       short s = -1;
       ShortParameter i1 = jset(k1, s).withUnits(none);
-      JsValue j1 = ItemSetJson.shortItemFormat().write(i1);
-      ShortParameter in1 = ItemSetJson.shortItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.shortParameterFormat().write(i1);
+      ShortParameter in1 = ParameterSetJson.shortParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // int item encode/decode
@@ -69,8 +69,8 @@ public class JJSONTests {
       IntKey k1 = IntKey(s3);
       int i = -1;
       IntParameter i1 = jset(k1, i).withUnits(none);
-      JsValue j1 = ItemSetJson.intItemFormat().write(i1);
-      IntParameter in1 = ItemSetJson.intItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.intParameterFormat().write(i1);
+      IntParameter in1 = ParameterSetJson.intParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // long item encode/decode
@@ -78,8 +78,8 @@ public class JJSONTests {
       LongKey k1 = LongKey(s3);
       long l = 123456L;
       LongParameter i1 = jset(k1, l).withUnits(none);
-      JsValue j1 = ItemSetJson.longItemFormat().write(i1);
-      LongParameter in1 = ItemSetJson.longItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.longParameterFormat().write(i1);
+      LongParameter in1 = ParameterSetJson.longParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // float item encode/decode
@@ -87,8 +87,8 @@ public class JJSONTests {
       FloatKey k1 = FloatKey(s3);
       float f = 123.456f;
       FloatParameter i1 = jset(k1, f).withUnits(none);
-      JsValue j1 = ItemSetJson.floatItemFormat().write(i1);
-      FloatParameter in1 = ItemSetJson.floatItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.floatParameterFormat().write(i1);
+      FloatParameter in1 = ParameterSetJson.floatParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // double item encode/decode
@@ -96,24 +96,24 @@ public class JJSONTests {
       DoubleKey k1 = new DoubleKey(s3);
       double f = 123.456;
       DoubleParameter i1 = jset(k1, f).withUnits(none);
-      JsValue j1 = ItemSetJson.doubleItemFormat().write(i1);
-      DoubleParameter in1 = ItemSetJson.doubleItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.doubleParameterFormat().write(i1);
+      DoubleParameter in1 = ParameterSetJson.doubleParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // boolean item encode/decode
     {
       BooleanKey k1 = new BooleanKey(s3);
       BooleanParameter i1 = jset(k1, true, false).withUnits(none);
-      JsValue j1 = ItemSetJson.booleanItemFormat().write(i1);
-      BooleanParameter in1 = ItemSetJson.booleanItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.booleanParameterFormat().write(i1);
+      BooleanParameter in1 = ParameterSetJson.booleanParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
     // string item encode/decode
     {
       StringKey k1 = new StringKey(s3);
       StringParameter i1 = jset(k1, "Blue", "Green").withUnits(none);
-      JsValue j1 = ItemSetJson.stringItemFormat().write(i1);
-      StringParameter in1 = ItemSetJson.stringItemFormat().read(j1);
+      JsValue j1 = ParameterSetJson.stringParameterFormat().write(i1);
+      StringParameter in1 = ParameterSetJson.stringParameterFormat().read(j1);
       assertTrue(in1.equals(i1));
     }
   }
@@ -124,7 +124,7 @@ public class JJSONTests {
   }
 
   @Test
-  public void testSetupConfigJSON() {
+  public void testSetupJSON() {
     CharKey k1 = new CharKey("a");
     IntKey k2 = new IntKey("b");
     LongKey k3 = new LongKey("c");
@@ -145,8 +145,8 @@ public class JJSONTests {
     {
       Setup c1 = new Setup(info, ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(c1.size() == 7);
-      JsValue c1out = ItemSetJson.writeSequenceItemSet(c1);
-      Setup c1in = ItemSetJson.readSequenceItemSet(c1out);
+      JsValue c1out = ParameterSetJson.writeSequenceCommand(c1);
+      Setup c1in = ParameterSetJson.readSequenceCommand(c1out);
       assertTrue(jvalue(jitem(c1in, k3)) == 1234L);
       assertEquals(c1, c1in);
     }
@@ -154,8 +154,8 @@ public class JJSONTests {
     {
       Observe c1 = new Observe(info, ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(c1.size() == 7);
-      JsValue c1out = ItemSetJson.writeSequenceItemSet(c1);
-      Observe c1in = ItemSetJson.readSequenceItemSet(c1out);
+      JsValue c1out = ParameterSetJson.writeSequenceCommand(c1);
+      Observe c1in = ParameterSetJson.readSequenceCommand(c1out);
       assertTrue(jvalue(jitem(c1in, k3)) == 1234L);
       assertEquals(c1, c1in);
     }
@@ -163,8 +163,8 @@ public class JJSONTests {
     {
       StatusEvent e1 = new StatusEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(e1.size() == 7);
-      JsValue e1out = ItemSetJson.writeEvent(e1);
-      StatusEvent e1in = ItemSetJson.readEvent(e1out);
+      JsValue e1out = ParameterSetJson.writeEvent(e1);
+      StatusEvent e1in = ParameterSetJson.readEvent(e1out);
       assertTrue(jvalue(jitem(e1in, k3)) == 1234L);
       assertEquals(e1, e1in);
     }
@@ -172,8 +172,8 @@ public class JJSONTests {
     {
       ObserveEvent e1 = new ObserveEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(e1.size() == 7);
-      JsValue e1out = ItemSetJson.writeEvent(e1);
-      ObserveEvent e1in = ItemSetJson.readEvent(e1out);
+      JsValue e1out = ParameterSetJson.writeEvent(e1);
+      ObserveEvent e1in = ParameterSetJson.readEvent(e1out);
       assertTrue(jvalue(jitem(e1in, k3)) == 1234L);
       assertEquals(e1, e1in);
     }
@@ -181,8 +181,8 @@ public class JJSONTests {
     {
       SystemEvent e1 = new SystemEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
       assertTrue(e1.size() == 7);
-      JsValue e1out = ItemSetJson.writeEvent(e1);
-      SystemEvent e1in = ItemSetJson.readEvent(e1out);
+      JsValue e1out = ParameterSetJson.writeEvent(e1);
+      SystemEvent e1in = ParameterSetJson.readEvent(e1out);
       assertTrue(jvalue(jitem(e1in, k3)) == 1234L);
       assertEquals(e1, e1in);
     }
@@ -200,10 +200,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jitem(sc1in, k1), di);
   }
@@ -219,10 +219,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1.data());
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -240,10 +240,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -259,10 +259,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -279,10 +279,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
   }
@@ -301,10 +301,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1), 0).data(), m1In);
     assertEquals(jvalue(jitem(sc1, k1), 1).data(), m2In);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
   }
@@ -321,10 +321,10 @@ public class JJSONTests {
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
     assertEquals(jvalue(jitem(sc1, k1)).data()[2][2], 9);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -341,10 +341,10 @@ public class JJSONTests {
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
     assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
   }
@@ -355,16 +355,16 @@ public class JJSONTests {
     ShortMatrixKey k1 = new ShortMatrixKey("myMatrix");
     short[][] m1In = new short[][ ]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     ShortMatrix m1 = ShortMatrix(m1In);
-    Setup sc1 = jadd(JItems.Setup(info, ck), jset(k1, m1));
+    Setup sc1 = jadd(JParameters.Setup(info, ck), jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
     assertTrue(jvalue(jitem(sc1, k1)).data()[2][2] == 9);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -377,7 +377,7 @@ public class JJSONTests {
     ShortArrayKey k2 = ShortArrayKey("myArray2");
     short[] m1In = new short[]{1, 2, 3};
     ShortArray m1 = ShortArray(m1In);
-    Setup sc1 = jadd(JItems.Setup(info, ck), jset(k1, m1));
+    Setup sc1 = jadd(JParameters.Setup(info, ck), jset(k1, m1));
     // Just checking to see if adding second works
     sc1 = jadd(sc1, jset(k2, m1));
     assertTrue(sc1.size() == 2);
@@ -385,10 +385,10 @@ public class JJSONTests {
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
     assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -399,16 +399,16 @@ public class JJSONTests {
     LongMatrixKey k1 = LongMatrixKey("myMatrix");
     long[][] m1In = new long[][ ]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     LongMatrix m1 = LongMatrix(m1In);
-    Setup sc1 = JItems.Setup(info, ck).add(jset(k1, m1));
+    Setup sc1 = JParameters.Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data()[2], m1In[2]);
     assertTrue(jvalue(jitem(sc1, k1)).data()[2][2] == 9);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }
@@ -419,16 +419,16 @@ public class JJSONTests {
     LongArrayKey k1 = LongArrayKey("myArray");
     long[] m1In = new long[]{1, 2, 3};
     LongArray m1 = LongArray(m1In);
-    Setup sc1 = JItems.Setup(info, ck).add(jset(k1, m1));
+    Setup sc1 = JParameters.Setup(info, ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
     assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
     assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
-    JsValue sc1out = ItemSetJson.writeSequenceItemSet(sc1);
+    JsValue sc1out = ParameterSetJson.writeSequenceCommand(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
-    Setup sc1in = ItemSetJson.readSequenceItemSet(sc1out);
+    Setup sc1in = ParameterSetJson.readSequenceCommand(sc1out);
     assertEquals(sc1, sc1in);
     assertEquals(jvalue(jitem(sc1in, k1)), m1);
   }

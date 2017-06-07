@@ -10,11 +10,11 @@ val h1 = resolveHcd("example1")
 
 // Sets the rate by sending a message to assembly1
 def setRate(rate: Int): Unit = {
-    a1.submit(SetupConfigArg(obsId, SetupConfig(prefix).set(rateKey, rate)))
+    a1.submit(Setup(obsId, prefix).set(rateKey, rate))
 }
 
 // Sets the rate by sending a message to HCD "example1"
 def setHcdRate(rate: Int): Unit = {
-    h1.submit(SetupConfig(prefix).set(rateKey, rate))
+    h1.submit(Setup(prefix).set(rateKey, rate))
 }
 

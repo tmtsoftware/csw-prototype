@@ -5,7 +5,7 @@ import akka.testkit.javadsl.TestKit;
 import akka.util.Timeout;
 import csw.services.events.EventService.*;
 
-import static javacsw.util.itemSet.JItems.*;
+import static javacsw.util.params.JParameters.*;
 
 import csw.services.loc.LocationService;
 import csw.util.param.Events.*;

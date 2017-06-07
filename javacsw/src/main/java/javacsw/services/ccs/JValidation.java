@@ -26,9 +26,9 @@ public class JValidation {
     return new MissingKeyIssue(reason);
   }
 
-  // Returned when an Assembly receives a configuration with a ConfigKey/Prefix that it doesn't support
-  public static ValidationIssue WrongConfigKeyIssue(String reason) {
-    return new WrongConfigKeyIssue(reason);
+  // Returned when an Assembly receives a configuration with a Prefix/Prefix that it doesn't support
+  public static ValidationIssue WrongPrefixIssue(String reason) {
+    return new WrongPrefixIssue(reason);
   }
 
   // Returned when the item for a key is not the correct type (i.e. int vs double, etc.)

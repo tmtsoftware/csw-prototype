@@ -35,7 +35,7 @@
 //        system = null;
 //    }
 //
-//    // Test runs for numSecs seconds, continuously publishing SetupConfig objects and
+//    // Test runs for numSecs seconds, continuously publishing Setup objects and
 //    // receiving them in the subscriber.
 //    @Test
 //    public void testJavaEventService() throws Exception {
@@ -64,7 +64,7 @@
 //        private final double expTime = 1.0;
 //        private final ActorSystem system = getContext().system();
 //        private final KvsSettings settings = KvsSettings.getEventServiceSettings(system);
-//        private final IEventService<SetupConfig> kvs = IEventService.getSetupConfigStore(settings, system);
+//        private final IEventService<Setup> kvs = IEventService.getSetupStore(settings, system);
 //        private final String prefix = "tcs.mobie.red.dat.exposureInfo";
 //        private final LoggingAdapter log = Logging.getLogger(system, this);
 //
@@ -106,16 +106,16 @@
 //        }
 //
 //        // Gets the next config
-//        private SetupConfig nextConfig() {
+//        private Setup nextConfig() {
 //            nextId = nextId + 1;
-//            return new SetupConfig(prefix).jset(exposureTime, expTime);
+//            return new Setup(prefix).jset(exposureTime, expTime);
 //        }
 //    }
 //
 //    // ----
 //
 //    // A test class that subscribes to configs
-//    static class TestSubscriber extends JSubscriber.SetupConfigSubscriber {
+//    static class TestSubscriber extends JSubscriber.SetupSubscriber {
 //        private int count = 0;
 //        private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 //        private final String name;
@@ -138,14 +138,14 @@
 //            subscribe("tcs.mobie.red.dat.*");
 //
 //            receive(ReceiveBuilder
-//                    .match(SetupConfig.class, this::handleSetupConfig)
+//                    .match(Setup.class, this::handleSetup)
 //                    .matchEquals("done", m -> sender().tell(count, self()))
 //                    .match(ReceiveTimeout.class, t -> receiveTimedOut())
 //                    .matchAny(t -> log.warning("Unexpected message: " + t)
 //                    ).build());
 //        }
 //
-//        private void handleSetupConfig(SetupConfig config) {
+//        private void handleSetup(Setup config) {
 //            if (++count % 10000 == 0)
 //                log.debug("Received " + count + " configs so far: " + config);
 //        }

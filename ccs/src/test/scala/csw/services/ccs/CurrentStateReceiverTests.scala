@@ -22,7 +22,7 @@ class CurrentStateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCom
   val ck2: String = "tcs.tckPk.zenithAngle"
   val ckt: Prefix = ck2
 
-  val itemSetInfo = CommandInfo(ObsId("001"))
+  val commandInfo = CommandInfo(ObsId("001"))
 
   describe("Test basic operation") {
 

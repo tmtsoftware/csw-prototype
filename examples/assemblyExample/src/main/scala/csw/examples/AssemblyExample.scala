@@ -50,7 +50,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
    */
   private def validateSequenceConfigArg(s: Setup): Validation = {
     if (s.prefix.prefix != HCDExample.prefix) {
-      Invalid(WrongConfigKeyIssue("Wrong prefix"))
+      Invalid(WrongPrefixIssue("Wrong prefix"))
     } else {
       val missing = s.missingKeys(HCDExample.rateKey)
       if (missing.nonEmpty)

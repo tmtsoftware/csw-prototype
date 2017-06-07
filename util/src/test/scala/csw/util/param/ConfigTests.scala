@@ -32,7 +32,7 @@ class ConfigTests extends FunSpec {
   private val ck2 = "wfos.red.filter"
   private val ck3 = "wfos.red.detector"
 
-  private val itemSetInfo = CommandInfo(ObsId("Obs001"))
+  private val commandInfo: CommandInfo = "Obs001"
 
   describe("Basic key tests") {
     val k1 = IntKey(s1)
@@ -72,7 +72,7 @@ class ConfigTests extends FunSpec {
     it("Should allow adding keys using single set") {
       val i1 = k1.set(22)
       val i2 = k2.set("A")
-      val sc1 = Setup(itemSetInfo, ck3).add(i1).add(i2)
+      val sc1 = Setup(commandInfo, ck3).add(i1).add(i2)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
       assert(sc1.exists(k2))
@@ -90,7 +90,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should allow setting with units") {
-      var sc1 = Setup(itemSetInfo, ck1)
+      var sc1 = Setup(commandInfo, ck1)
       sc1 = sc1.madd(k1.set(22).withUnits(degrees), k2.set("B"))
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
@@ -100,7 +100,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should allow apply which returns values") {
-      var sc1 = Setup(itemSetInfo, ck1)
+      var sc1 = Setup(commandInfo, ck1)
       sc1 = sc1.madd(k1.set(22).withUnits(degrees), k2.set("C"))
 
       val v1: IntParameter = sc1(k1)
@@ -113,7 +113,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("should update for the same key with set") {
-      var sc1 = Setup(itemSetInfo, ck1)
+      var sc1 = Setup(commandInfo, ck1)
       sc1 = sc1.add(k2.set("D"))
       assert(sc1.exists(k2))
       assert(sc1(k2).values == Vector("D"))
@@ -151,7 +151,7 @@ class ConfigTests extends FunSpec {
       assert(i2.head == 33)
       assert(i2.units == NoUnits)
 
-      var sc = Setup(itemSetInfo, ck1).add(i1)
+      var sc = Setup(commandInfo, ck1).add(i1)
       // Use option
       assert(sc.get(k1).get == i1)
       assert(sc.get(k1).get.head == 22)
@@ -238,7 +238,7 @@ class ConfigTests extends FunSpec {
     it("Should allow adding keys") {
       val i1 = k1.set(22)
       val i2 = k2.set(44)
-      val oc1 = Observe(itemSetInfo, ck3).add(i1).add(i2)
+      val oc1 = Observe(commandInfo, ck3).add(i1).add(i2)
       assert(oc1.size == 2)
       assert(oc1.exists(k1))
       assert(oc1.exists(k2))
@@ -247,7 +247,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should allow setting") {
-      var oc1 = Observe(itemSetInfo, ck1)
+      var oc1 = Observe(commandInfo, ck1)
       oc1 = oc1.add(k1.set(22)).add(k2.set(44))
       assert(oc1.size == 2)
       assert(oc1.exists(k1))
@@ -255,7 +255,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should allow apply") {
-      var oc1 = Observe(itemSetInfo, ck1)
+      var oc1 = Observe(commandInfo, ck1)
       oc1 = oc1.add(k1.set(22)).add(k2.set(44))
 
       val v1 = oc1(k1)
@@ -267,7 +267,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("should update for the same key with set") {
-      var oc1 = Observe(itemSetInfo, ck1)
+      var oc1 = Observe(commandInfo, ck1)
       oc1 = oc1.add(k2.set(22))
       assert(oc1.exists(k2))
       assert(oc1(k2).values == Vector(22))
@@ -278,7 +278,7 @@ class ConfigTests extends FunSpec {
     }
 
     it("should update for the same key with add") {
-      var oc1 = Observe(itemSetInfo, ck1)
+      var oc1 = Observe(commandInfo, ck1)
       oc1 = oc1.add(k2.set(22).withUnits(NoUnits))
       assert(oc1.exists(k2))
       assert(oc1(k2).values == Vector(22))
@@ -321,7 +321,7 @@ class ConfigTests extends FunSpec {
 
   describe("testing for getting typed items") {
     val t1 = IntKey("test1")
-    val sc1 = Setup(itemSetInfo, ck1).add(t1.set(Vector(22), degrees))
+    val sc1 = Setup(commandInfo, ck1).add(t1.set(Vector(22), degrees))
 
     val item: Option[IntParameter] = sc1.get(t1) // Works now!
     val itm: IntParameter = item.get
@@ -344,7 +344,7 @@ class ConfigTests extends FunSpec {
     val i3 = k3.set("A", "B", "C")
 
     it("Should get as IntItem") {
-      val sc = Setup(itemSetInfo, ck1).add(i1).add(i2).add(i3)
+      val sc = Setup(commandInfo, ck1).add(i1).add(i2).add(i3)
 
       val out1: Option[IntParameter] = sc.get(k1)
       val out2: Option[DoubleParameter] = sc.get(k2)
@@ -366,7 +366,7 @@ class ConfigTests extends FunSpec {
     val i3 = k3.set("A", "B", "C")
 
     it("Should allow vararg add") {
-      val sc = Setup(itemSetInfo, ck1).madd(i1, i2, i3)
+      val sc = Setup(commandInfo, ck1).madd(i1, i2, i3)
       assert(sc.size == 3)
       assert(sc.exists(k1))
       assert(sc.exists(k2))
@@ -388,7 +388,7 @@ class ConfigTests extends FunSpec {
     val i4 = k4.set(LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
     it("Should allow removing one at a time") {
-      var sc1 = Setup(itemSetInfo, ck1).madd(i1, i2, i3, i4)
+      var sc1 = Setup(commandInfo, ck1).madd(i1, i2, i3, i4)
       assert(sc1.size == 4)
       assert(sc1.get(k1).isDefined)
       assert(sc1.get(k2).isDefined)
@@ -455,7 +455,7 @@ class ConfigTests extends FunSpec {
     val i5 = k1.set(22) // This is not added for testing not present removal
 
     it("Should allow removing one at a time") {
-      var sc1 = Setup(itemSetInfo, ck1).madd(i1, i2, i3, i4)
+      var sc1 = Setup(commandInfo, ck1).madd(i1, i2, i3, i4)
       assert(sc1.size == 4)
       assert(sc1.get(k1).isDefined)
       assert(sc1.get(k2).isDefined)

@@ -34,7 +34,7 @@
 //    val ck2 = "wfos.red.filter"
 //    val ck3 = "wfos.red.detector"
 //
-//    var sc1: SetupConfig = SetupConfig(ck)
+//    var sc1: Setup = Setup(ck)
 //    sc1 = sc1.set(position, "GG484")
 //    it("should have size 1") {
 //      assert(sc1.size === 1)
@@ -47,7 +47,7 @@
 //    }
 //
 //    it("should work with a second instance as well") {
-//      val sc2 = SetupConfig(ck2)
+//      val sc2 = Setup(ck2)
 //        .set(position, "IR2")
 //        .set(cloudCover, PERCENT_20)
 //      assert(sc2(position) === "IR2")
@@ -58,7 +58,7 @@
 //      assert(sc2.get(cloudCover) == Some(PERCENT_20))
 //    }
 //
-//    val ob1 = ObserveConfig(ck3)
+//    val ob1 = Observe(ck3)
 //      .set(exposureTime, 22)
 //      .set(repeats, 2)
 //      .set(exposureType, OBSERVE)
@@ -80,7 +80,7 @@
 //      val arrayKey = Key.create[Seq[Int]]("arrayKey")
 //
 //      val value = Seq(1, 2, 3, 4)
-//      val sc1 = SetupConfig(ck1).set(arrayKey, value)
+//      val sc1 = Setup(ck1).set(arrayKey, value)
 //      assert(sc1.size == 1)
 //      assert(sc1(arrayKey) === value)
 //    }
@@ -92,10 +92,10 @@
 //    val ck2 = "wfos.red.filter"
 //    val ck3 = "iris.imager.detector"
 //
-//    val sc1: SetupConfig = SetupConfig(ck)
-//    val sc2 = SetupConfig(ck2)
-//    val ob1 = ObserveConfig(ck3)
-//    val w1 = WaitConfig(ck3)
+//    val sc1: Setup = Setup(ck)
+//    val sc2 = Setup(ck2)
+//    val ob1 = Observe(ck3)
+//    val w1 = Wait(ck3)
 //    val s1 = Seq(sc1, sc2, ob1, w1)
 //    //println("Sca1: " + s1)
 //
@@ -105,17 +105,17 @@
 //    }
 //
 //    it("should see 2 setup configs") {
-//      val r1 = ConfigFilters.onlySetupConfigs(s1)
+//      val r1 = ConfigFilters.onlySetups(s1)
 //      assert(r1.size == 2)
 //    }
 //
 //    it("should see 1 observe configs") {
-//      val r1 = ConfigFilters.onlyObserveConfigs(s1)
+//      val r1 = ConfigFilters.onlyObserves(s1)
 //      assert(r1.size == 1)
 //    }
 //
 //    it("should see 1 wait config") {
-//      val r1 = ConfigFilters.onlyWaitConfigs(s1)
+//      val r1 = ConfigFilters.onlyWaits(s1)
 //      assert(r1.size == 1)
 //    }
 //
@@ -162,9 +162,9 @@
 //    val ck2 = "wfos.red.filter"
 //    val ck3 = "iris.imager.detector"
 //
-//    val sc1: SetupConfig = SetupConfig(ck)
-//    val ob1 = ObserveConfig(ck3)
-//    val w1 = WaitConfig(ck3)
+//    val sc1: Setup = Setup(ck)
+//    val ob1 = Observe(ck3)
+//    val w1 = Wait(ck3)
 //
 //    it("SequenceConfig should allow all three config types") {
 //      assert(sc1.isInstanceOf[SequenceConfig])
@@ -172,10 +172,10 @@
 //      assert(w1.isInstanceOf[SequenceConfig])
 //    }
 //
-//    it("ControlConfig should not allow WaitConfig") {
+//    it("ControlConfig should not allow Wait") {
 //      assert(sc1.isInstanceOf[ControlConfig])
 //      assert(ob1.isInstanceOf[ControlConfig])
-//      // assert(w1.isInstanceOf[ControlConfig] != true) // fruitless since WaitConfig does in extend ControlConfig
+//      // assert(w1.isInstanceOf[ControlConfig] != true) // fruitless since Wait does in extend ControlConfig
 //    }
 //  }
 //
@@ -183,7 +183,7 @@
 //
 //    val ck = "wfos.blue.detector"
 //
-//    val ob1 = ObserveConfig(ck)
+//    val ob1 = Observe(ck)
 //      .set(exposureTime, 22)
 //      .set(repeats, 2)
 //      .set(exposureType, OBSERVE)

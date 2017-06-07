@@ -81,7 +81,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   }
 
   override def setup(s: Setup, commandOriginator: Option[ActorRef]): Validation = {
-    val validation = validateSetupConfig(s)
+    val validation = validateSetup(s)
     if (validation == Valid) {
       for (hcdActorRef <- getActorRefs(s.prefixStr)) {
         // Submit to the HCD
@@ -106,8 +106,8 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     x.flatten
   }
 
-  private def validateSetupConfig(sc: Setup): Validation = {
+  private def validateSetup(sc: Setup): Validation = {
     if (sc.exists(TestConfig.posName)) Valid
-    else Invalid(WrongConfigKeyIssue("Expected a posName key"))
+    else Invalid(WrongPrefixIssue("Expected a posName key"))
   }
 }

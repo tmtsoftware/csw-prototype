@@ -12,7 +12,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   import Validation._
 
   private val missingKeyIssueType = classOf[MissingKeyIssue].getSimpleName
-  private val wrongConfigKeyIssueType = classOf[WrongConfigKeyIssue].getSimpleName
+  private val wrongPrefixIssueType = classOf[WrongPrefixIssue].getSimpleName
   private val wrongItemTypeIssueType = classOf[WrongItemTypeIssue].getSimpleName
   private val wrongUnitsIssueType = classOf[WrongUnitsIssue].getSimpleName
   private val wrongNumberOfItemsIssueType = classOf[WrongNumberOfItemsIssue].getSimpleName
@@ -44,7 +44,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
 
   private def issueToType(obj: ValidationIssue) = obj match {
     case _: Validation.MissingKeyIssue                   => missingKeyIssueType
-    case _: Validation.WrongConfigKeyIssue               => wrongConfigKeyIssueType
+    case _: Validation.WrongPrefixIssue               => wrongPrefixIssueType
     case _: Validation.WrongItemTypeIssue                => wrongItemTypeIssueType
     case _: Validation.WrongUnitsIssue                   => wrongUnitsIssueType
     case _: Validation.WrongNumberOfItemsIssue           => wrongNumberOfItemsIssueType
@@ -67,7 +67,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
       case Seq(JsString(issue), JsString(reason)) =>
         issue match {
           case `missingKeyIssueType`                   => MissingKeyIssue(reason)
-          case `wrongConfigKeyIssueType`               => WrongConfigKeyIssue(reason)
+          case `wrongPrefixIssueType`               => WrongPrefixIssue(reason)
           case `wrongItemTypeIssueType`                => WrongItemTypeIssue(reason)
           case `wrongUnitsIssueType`                   => WrongUnitsIssue(reason)
           case `wrongNumberOfItemsIssueType`           => WrongNumberOfItemsIssue(reason)

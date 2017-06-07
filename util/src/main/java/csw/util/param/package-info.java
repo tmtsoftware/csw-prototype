@@ -4,26 +4,26 @@
  * <p>
  * This project is intended to hold reusable utility classes used throughout the csw source code.
  * <p>
- * <strong>Configurations and Events</strong>
+ * <strong>Commands and Events</strong>
  * <p>
- * This package contains classes and traits used for ''configurations'' and ''events''.
+ * This package contains classes and traits used for ''commands'' and ''events''.
  * These are all based on type-safe keys and values. Each key has a type member
  * and the key's values must be of that type.
  * <p>
- * <strong>Note</strong>: The config classes are implemented in Scala, so the automatically generated documentation is incomplete.
+ * <strong>Note</strong>: The param classes are implemented in Scala, so the automatically generated documentation is incomplete.
  * Please see the Scaladocs for this package for a more complete picture.
  * <p>
- * Configurations and events are based on maps of keys and values, with some additional
+ * Commands and events are based on maps of keys and values, with some additional
  * information included, such as ids or timestamps.
  * <p>
  * The key/value store and event service make use of these classes, which need to be
  * serialized and deserialized for external storage (in Redis or Hornetq, for example).
- * The {@link csw.util.param.ItemSetSerializer.ItemSetSerializer} class provides support for this
+ * The {@link csw.util.param.ParamSetSerializer.ParamSetSerializer} class provides support for this
  * (based on java serialization).
  * <p>
  * <strong>Scala and Java APIs</strong>
  * <p>
- * All the config and event classes are immutable. In Scala, the `set` methods return a new instance of the object with a
+ * All the param and event classes are immutable. In Scala, the `set` methods return a new instance of the object with a
  * new item added and the `get` methods return an Option, in case the Key is not found. There are also `value` methods
  * that return a value directly, throwing an exception if the key or value is not found.
  * <p>
@@ -61,6 +61,8 @@
  * Example:
  * <p>
  * <pre> {@code
+ *   val commandInfo = CommandInfo(ObsId("001"))
+ *
  *   // Define a key for an event id
  *   val eventNum = IntKey("eventNum")
  *
@@ -76,7 +78,7 @@
  *
  *   // ...
  *
- *   val sc = SetupConfig(prefix)
+ *   val sc = Setup(commandInfo, prefix)
  *       .set(eventNum, num)
  *       .set(exposureTime, 1.0)
  *       .set(imageData, testImageData)
@@ -85,6 +87,7 @@
  * Java Example:
  * <p>
  * <pre> {@code
+ *     Parameters.CommandInfo info = new CommandInfo("Obs001");
  *     static final DoubleKey exposureTime = new DoubleKey("exposureTime");
  *
  *     // Define a key for an event id
@@ -101,7 +104,7 @@
  *
  *     // ...
  *
- *     SetupConfig sc = new SetupConfig(prefix)
+ *     Setup sc = new Setup(commandInfo, prefix)
  *            .jset(eventNum, num)
  *            .jset(exposureTime, 1.0)
  *            .jset(imageData, testImageData);
@@ -119,7 +122,7 @@
  *         Vector(4.1, 5.1, 6.1),
  *         Vector(7.2, 8.2, 9.2)
  *       ))
- *       val sc1 = SetupConfig(ck).set(k1, m1)
+ *       val sc1 = Setup(commandInfo, ck).set(k1, m1)
  *       assert(jvalue(jitem(sc1, k1)) == m1)
  * } </pre>
  * <p>
@@ -131,39 +134,8 @@
  *                 Arrays.asList(1.0, 2.0, 3.0),
  *                 Arrays.asList(4.1, 5.1, 6.1),
  *                 Arrays.asList(7.2, 8.2, 9.2)));
- *         SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+ *         Setup sc1 = new Setup(commandInfo, ck).jset(k1, m1);
  *         assert (sc1.jvalue(k1).equals(m1));
- * } </pre>
- *
- * <p>
- * <strong>Combining Configs</strong>
- * <p>
- * In some cases you may need to wrap multiple configs, for example to pass to an assembly.
- * <p>
- * <pre> {@code
- *     val encoder1 = IntKey("encoder1")
- *     val encoder2 = IntKey("encoder2")
- *     val xOffset = IntKey("xOffset")
- *     val yOffset = IntKey("yOffset")
- *     val obsId = "Obs001"
- *
- *     val sc1 = ObserveConfig(ck1).set(encoder1, 22).set(encoder2, 33)
- *     val sc2 = ObserveConfig(ck1).set(xOffset, 1).set(yOffset, 2)
- *     val configArg = ObserveConfigArg(obsId, sc1, sc2)
- * } </pre>
- * <p>
- * Java API:
- * <p>
- * <pre> {@code
- *     IntKey encoder1 = new IntKey("encoder1");
- *     IntKey encoder2 = new IntKey("encoder2");
- *     IntKey xOffset = new IntKey("xOffset");
- *     IntKey yOffset = new IntKey("yOffset");
- *     String obsId = "Obs001";
- *
- *     ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
- *     ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
- *     ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
  * } </pre>
  */
 package csw.util.param;

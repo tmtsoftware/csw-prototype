@@ -21,12 +21,12 @@ object StateVariable {
     /**
      * identifies the target subsystem
      */
-    val itemSetKey: Prefix
+    val prefix: Prefix
 
     /**
      * an optional initial set of items (keys with values)
      */
-    val items: ParameterSet
+    val paramSet: ParameterSet
   }
 
   /**
@@ -43,15 +43,15 @@ object StateVariable {
    * @return true if the demand and current states match (in this case, are equal)
    */
   def defaultMatcher(demand: DemandState, current: CurrentState): Boolean =
-    demand.prefixStr == current.prefixStr && demand.items == current.items
+    demand.prefixStr == current.prefixStr && demand.paramSet == current.paramSet
 
   /**
    * A state variable that indicates the ''demand'' or requested state.
    *
    * @param prefix identifies the target subsystem
-   * @param items     an optional initial set of items (keys with values)
+   * @param paramSet     an optional initial set of items (keys with values)
    */
-  case class DemandState(prefix: Prefix, items: ParameterSet = Set.empty[Parameter[_]])
+  case class DemandState(prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
       extends ParameterSetType[DemandState] with ParameterSetKeyData with StateVariable {
 
     override def create(data: ParameterSet) = DemandState(prefix, data)
@@ -64,23 +64,23 @@ object StateVariable {
     /**
      * Java API to create a DemandState from a SetupItemSet
      */
-    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.items)
+    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.paramSet)
   }
 
   object DemandState {
     /**
      * Converts a SetupItemSet to a DemandState
      */
-    implicit def apply(itemSet: Setup): DemandState = DemandState(itemSet.prefixStr, itemSet.items)
+    implicit def apply(itemSet: Setup): DemandState = DemandState(itemSet.prefixStr, itemSet.paramSet)
   }
 
   /**
    * A state variable that indicates the ''current'' or actual state.
    *
    * @param prefix identifies the target subsystem
-   * @param items     an optional initial set of items (keys with values)
+   * @param paramSet     an optional initial set of items (keys with values)
    */
-  case class CurrentState(prefix: Prefix, items: ParameterSet = Set.empty[Parameter[_]])
+  case class CurrentState(prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
       extends ParameterSetType[CurrentState] with ParameterSetKeyData with StateVariable {
 
     override def create(data: ParameterSet) = CurrentState(prefix, data)
@@ -93,7 +93,7 @@ object StateVariable {
     /**
      * Java API to create a DemandState from a SetupItemSet
      */
-    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.items)
+    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.paramSet)
 
   }
 
@@ -101,12 +101,12 @@ object StateVariable {
     /**
      * Converts a SetupItemSet to a CurrentState
      */
-    implicit def apply(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.items)
+    implicit def apply(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.paramSet)
 
     /**
      * Java API to create a CurrentState from a SetupItemSet
      */
-    def fromSetupItemSet(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.items)
+    def fromSetupItemSet(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.paramSet)
   }
 
   /**

@@ -16,7 +16,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
   private val ck1: String = "wfos.prog.cloudcover"
   private val ck2: String = "wfos.red.filter"
   //  private val ck3: String = "wfos.red.detector"
-  private val itemSetInfo = CommandInfo(ObsId("Obs001"))
+  private val commandInfo = CommandInfo(ObsId("Obs001"))
 
   describe("creating items") {
     import csw.util.param.ItemSetDsl.{size => ssize}
@@ -119,12 +119,12 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val k3 = DoubleKey(s3)
 
     it("should allow adding single items") {
-      val sc1 = add(Setup(itemSetInfo, ck1), set(k1, 1000))
+      val sc1 = add(Setup(commandInfo, ck1), set(k1, 1000))
       sc1.size should be(1)
     }
 
     it("shoudl allow adding several at once") {
-      val sc2 = madd(Setup(itemSetInfo, ck2), set(k1, 1000), set(k2, "1000"), set(k3, 1000.0))
+      val sc2 = madd(Setup(commandInfo, ck2), set(k1, 1000), set(k2, "1000"), set(k3, 1000.0))
 
       sc2.size should be(3)
       exists(sc2, k1) shouldBe true
@@ -143,7 +143,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i3 = set(k3, 1000.0)
 
     it("should allow accessing existing items") {
-      val sc1 = madd(Setup(itemSetInfo, ck2), i1, i2, i3)
+      val sc1 = madd(Setup(commandInfo, ck2), i1, i2, i3)
       sc1.size should be(3)
 
       item(sc1, k1) should equal(i1)
@@ -152,7 +152,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     }
 
     it("should throw NoSuchElementException if not present") {
-      val sc1 = madd(Setup(itemSetInfo, ck2), i1, i2, i3)
+      val sc1 = madd(Setup(commandInfo, ck2), i1, i2, i3)
 
       val k4 = FloatKey("not present")
 
@@ -177,7 +177,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i3 = set(k3, 1000.0)
 
     it("should allow accessing existing items") {
-      var sc1 = Setup(itemSetInfo, ck2)
+      var sc1 = Setup(commandInfo, ck2)
       sc1 = madd(sc1, i1, i2, i3)
       csize(sc1) should be(3)
 
@@ -187,7 +187,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     }
 
     it("should be None if not present") {
-      val sc1 = madd(Setup(itemSetInfo, ck2), i1, i2, i3)
+      val sc1 = madd(Setup(commandInfo, ck2), i1, i2, i3)
 
       val k4 = FloatKey("not present")
       get(sc1, k1) should equal(Option(i1))
@@ -208,7 +208,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i3 = set(k3, 1000.0, 2000.0)
 
     it("should allow accessing existing items") {
-      val sc1 = madd(Setup(itemSetInfo, ck2), i1, i2, i3)
+      val sc1 = madd(Setup(commandInfo, ck2), i1, i2, i3)
       csize(sc1) should be(3)
 
       get(sc1, k1, 0) should be(Some(1000))
@@ -232,7 +232,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
     it("Should allow removing one at a time") {
-      var sc1 = madd(Setup(itemSetInfo, ck1), i1, i2, i3, i4)
+      var sc1 = madd(Setup(commandInfo, ck1), i1, i2, i3, i4)
       csize(sc1) should be(4)
       get(sc1, k1).isDefined should be(true)
       get(sc1, k2).isDefined should be(true)
@@ -297,7 +297,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
     it("Should allow removing one at a time") {
-      var sc1 = madd(Setup(itemSetInfo, ck1), i1, i2, i3, i4)
+      var sc1 = madd(Setup(commandInfo, ck1), i1, i2, i3, i4)
       sc1.size should be(4)
       get(sc1, k1).isDefined should be(true)
       get(sc1, k2).isDefined should be(true)
@@ -360,13 +360,13 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
 
     it("should allow creation") {
-      val sc1 = sc(itemSetInfo, ck2, i1, i2)
+      val sc1 = sc(commandInfo, ck2, i1, i2)
       csize(sc1) should be(2)
       exists(sc1, k1) shouldBe true
       exists(sc1, k2) shouldBe true
 
       val sc2 = sc(
-        itemSetInfo,
+        commandInfo,
         ck2,
         k1 -> 3 withUnits UnitsOfMeasure.degrees,
         k2 -> 44.3 withUnits UnitsOfMeasure.meters
@@ -389,7 +389,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i3 = set(zeroPoint, 1000) // Where home is
 
     it("should create overriding defaults") {
-      val default: Setup = sc(itemSetInfo, ck2, i1, i2, i3)
+      val default: Setup = sc(commandInfo, ck2, i1, i2, i3)
 
       val sc1 = add(default, zeroPoint -> 2000)
 

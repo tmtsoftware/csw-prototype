@@ -1,8 +1,6 @@
 package csw.services.ccs
 
 import csw.services.ccs.Validation.{Validation, ValidationIssue}
-import csw.util.param.Parameters._
-import csw.util.param.RunId
 
 object CommandStatus {
 
@@ -51,7 +49,7 @@ object CommandStatus {
 
   //  /**
   //    * Command Completed with a result
-  //    * @param result - currently a SetupConfig - would like to add ResultConfiguration to types in Configuration and use it here
+  //    * @param result - currently a Setup - would like to add ResultConfiguration to types in Configuration and use it here
   //    */
   //  final case class CompletedWithResult(result: Result) extends CommandResponse
 

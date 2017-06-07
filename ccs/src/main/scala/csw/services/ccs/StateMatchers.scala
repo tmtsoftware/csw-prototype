@@ -27,7 +27,7 @@ trait StateMatcher {
 case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
   def prefix = demand.prefixStr
 
-  def check(current: CurrentState): Boolean = demand.items.equals(current.items)
+  def check(current: CurrentState): Boolean = demand.paramSet.equals(current.paramSet)
 }
 
 /**
@@ -46,7 +46,7 @@ case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extend
   def prefix = demand.prefixStr
 
   def check(current: CurrentState): Boolean = {
-    demand.items.forall { di =>
+    demand.paramSet.forall { di =>
       val foundItem: Option[Parameter[_]] = current.find(di)
       foundItem.fold(false)(if (withUnits) _.equals(di) else _.values.equals(di.values))
     }

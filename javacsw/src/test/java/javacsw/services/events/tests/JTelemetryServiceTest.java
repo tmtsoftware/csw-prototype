@@ -19,8 +19,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.util.itemSet.JItems.*;
-import static javacsw.util.itemSet.JItems.jitem;
+import static javacsw.util.params.JParameters.*;
+import static javacsw.util.params.JParameters.jitem;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 

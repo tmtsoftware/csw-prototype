@@ -75,7 +75,7 @@ object HcdControllerTests {
 
       case WorkDone(config) =>
         log.debug(s"Done processing $config")
-        currentState = CurrentState(config.prefixStr, config.items)
+        currentState = CurrentState(config.prefixStr, config.paramSet)
         context.parent ! currentState
 
       case x => log.error(s"Unexpected message $x")
@@ -84,7 +84,7 @@ object HcdControllerTests {
 
 }
 
-// Tests sending a SetupConfig to a test HCD, then starting a matcher actor to subscribe
+// Tests sending a Setup to a test HCD, then starting a matcher actor to subscribe
 // to the current state (a state variable updated by the HCD). When the current state matches
 // the demand state, the matcher actor replies with a message (containing the current state).
 

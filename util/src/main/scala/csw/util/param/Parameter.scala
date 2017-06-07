@@ -6,13 +6,13 @@ import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 
 /**
- * The type of an item in an ItemSet
+ * The type of a parameter in a parameterSet
  *
  * @tparam S the Scala type
  */
 trait Parameter[S] {
   /**
-   * @return the name of the key for this item
+   * @return the name of the key for this parameter
    */
   def keyName: String
 
@@ -22,12 +22,12 @@ trait Parameter[S] {
   def units: Units
 
   /**
-   * @return All the values for this item
+   * @return All the values for this parameter
    */
   def values: Vector[S]
 
   /**
-   * The number of values in this item (values.size)
+   * The number of values in this parameter (values.size)
    *
    * @return
    */
@@ -67,21 +67,21 @@ trait Parameter[S] {
    * Sets the units for the values
    *
    * @param units the units for the values
-   * @return a new instance of this item with the units set
+   * @return a new instance of this parameter with the units set
    */
   def withUnits(units: Units): Parameter[S]
 
-  def valuesToString = values.mkString("(", ",", ")")
-  override def toString = s"$keyName(${valuesToString}$units)"
+  def valuesToString: String = values.mkString("(", ",", ")")
+  override def toString = s"$keyName($valuesToString$units)"
 }
 
 /**
- * The type of a configuration item key.
- * Note that the Item is f-bounded polymorphic so that item returns will have the correct types
+ * The type of a parameter key.
+ * Note that the Parameter is f-bounded polymorphic so that parameter returns will have the correct types
  *
  * @param keyName the key
  * @tparam S the value's Scala type
- * @tparam I the type of the item created by this Key
+ * @tparam I the type of the parameter created by this Key
  */
 abstract class Key[S, I <: Parameter[S]](val keyName: String) extends Serializable {
 
@@ -90,7 +90,7 @@ abstract class Key[S, I <: Parameter[S]](val keyName: String) extends Serializab
    *
    * @param v     a vector of values
    * @param units optional units of the values (defaults to no units)
-   * @return an item containing the key name, values and units
+   * @return a parameter containing the key name, values and units
    */
   def set(v: Vector[S], units: Units = NoUnits): I
 
@@ -98,58 +98,58 @@ abstract class Key[S, I <: Parameter[S]](val keyName: String) extends Serializab
    * Sets the values for the key using a variable number of arguments
    *
    * @param v one or more values
-   * @return an item containing the key name, values (call withUnits() on the result to set the units)
+   * @return a parameter containing the key name, values (call withUnits() on the result to set the units)
    */
   def set(v: S*): I
 
   /**
    * Sets the values for the key
-   * This definition enables writing code like this (see [[ItemSetDsl]]):
+   * This definition enables writing code like this (see [[ParameterSetDsl]]):
    * {{{
-   *   val setupConfig = sc(
-   *    configKey,
+   *   val setup = sc(
+   *    prefix,
    *     key1 -> value1 withUnits UnitsOfMeasure.Deg,
    *     key2 -> value2  // with default units
    *   )
    * }}}
    *
    * @param v the value
-   * @return an item containing the key name and one value (call withUnits() on the result to set the units)
+   * @return a parameter containing the key name and one value (call withUnits() on the result to set the units)
    */
   def -> (v: S): I = set(v)
 
   /**
    * Sets the value and units for the key
-   * This definition enables writing code like this (see [[ItemSetDsl]]):
+   * This definition enables writing code like this (see [[ParameterSetDsl]]):
    * {{{
    *   val setupConfig = sc(
-   *    configKey,
+   *    prefix,
    *     key1 -> (value1, units1),
    *     key2 -> (value2, units2)
    *   )
    * }}}
    *
    * @param v a pair containing a single value for the key and the units of the value
-   * @return an item containing the key name, values and units
+   * @return a parameter containing the key name, values and units
    */
   def -> (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
 
   /**
    * Sets the values for the key as a Scala Vector
-   * This definition enables writing code like this (see [[ItemSetDsl]]):
+   * This definition enables writing code like this (see [[ParameterSetDsl]]):
    * {{{
-   *   val setupConfig = sc(configKey,
+   *   val setupConfig = sc(prefix,
    *     key1 -> Vector(...),
    *     key2 -> Vector(...)
    *   )
    * }}}
    *
    * @param v a vector of values
-   * @return an item containing the key name and values (call withUnits() on the result to set the units)
+   * @return a parameter containing the key name and values (call withUnits() on the result to set the units)
    */
   def -> (v: Vector[S]): I = set(v)
 
-  override def toString = keyName
+  override def toString: String = keyName
 
   override def equals(that: Any): Boolean = {
     that match {

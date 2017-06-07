@@ -42,7 +42,7 @@ object HcdController {
 }
 
 /**
- * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
+ * Base trait for an HCD controller actor that reacts immediately to Setup messages.
  */
 trait HcdController extends PublisherActor[CurrentState] {
   this: Actor =>

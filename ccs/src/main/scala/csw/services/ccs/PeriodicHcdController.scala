@@ -91,7 +91,7 @@ trait PeriodicHcdController {
   }
 
   /**
-   * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
+   * Removes and returns the next Setup from the queue, or None if the queue is empty
    */
   protected def nextConfig: Option[Setup] = {
     if (queue.nonEmpty) {
@@ -102,7 +102,7 @@ trait PeriodicHcdController {
   }
 
   /**
-   * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
+   * Returns the next Setup in the queue without removing it, or None if the queue is empty
    */
   protected def peekConfig: Option[Setup] = {
     queue.headOption

@@ -1,6 +1,6 @@
 package csw.services.event_old
 
-import csw.util.param.ItemSetSerializer._
+import csw.util.param.ParamSetSerializer._
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client._
 import org.hornetq.core.remoting.impl.invm.{InVMConnectorFactory, InVMAcceptorFactory}

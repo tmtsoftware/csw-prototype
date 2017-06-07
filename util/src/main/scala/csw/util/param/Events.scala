@@ -12,7 +12,7 @@ object Events {
   import Parameters._
 
   case class EventTime(time: Instant = Instant.now(Clock.systemUTC)) {
-    override def toString = time.toString
+    override def toString: String = time.toString
   }
 
   object EventTime {
@@ -27,7 +27,7 @@ object Events {
   def getEventTime: EventTime = EventTime()
 
   /**
-   * This will include information related to the observation that is related to a configuration.
+   * This will include information related to the observation that is related to an event.
    * This will grow and develop.
    *
    * @param source the source subsystem and prefix for the component
@@ -50,18 +50,18 @@ object Events {
 
   object EventInfo {
     implicit def apply(prefix: String): EventInfo = {
-      val configKey: Prefix = prefix
-      EventInfo(configKey, EventTime.toCurrent, None)
+      val prefix: Prefix = prefix
+      EventInfo(prefix, EventTime.toCurrent, None)
     }
 
     implicit def apply(prefix: String, time: EventTime): EventInfo = {
-      val configKey: Prefix = prefix
-      EventInfo(configKey, time, None)
+      val prefix: Prefix = prefix
+      EventInfo(prefix, time, None)
     }
 
     implicit def apply(prefix: String, time: EventTime, obsId: ObsId): EventInfo = {
-      val configKey: Prefix = prefix
-      EventInfo(configKey, time, Some(obsId))
+      val prefix: Prefix = prefix
+      EventInfo(prefix, time, Some(obsId))
     }
 
     // Java APIs
@@ -69,9 +69,9 @@ object Events {
   }
 
   /**
-   * Base trait for event configurations
+   * Base trait for events
    *
-   * @tparam T the subclass of ConfigType
+   * @tparam T the subclass of EventType
    */
   sealed trait EventType[T <: EventType[T]] extends ParameterSetType[T] with ParameterSetKeyData {
     self: T =>
@@ -109,7 +109,7 @@ object Events {
    */
   sealed trait EventServiceEvent {
     /**
-     * See prefix in ConfigType
+     * See prefix in EventType
      */
     def prefix: String
   }
@@ -118,9 +118,9 @@ object Events {
    * Defines a status event
    *
    * @param info event related information
-   * @param items an optional initial set of items (keys with values)
+   * @param paramSet an optional initial set of parameters (keys with values)
    */
-  case class StatusEvent(info: EventInfo, items: ParameterSet = Set.empty[Parameter[_]])
+  case class StatusEvent(info: EventInfo, paramSet: ParameterSet = Set.empty[Parameter[_]])
       extends EventType[StatusEvent] with EventServiceEvent {
 
     // Java API
@@ -130,7 +130,7 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[I <: Parameter[_]](item: I): StatusEvent = super.add(item)
+    override def add[I <: Parameter[_]](param: I): StatusEvent = super.add(param)
 
     override def remove[S, I <: Parameter[S]](key: Key[S, I]): StatusEvent = super.remove(key)
   }
@@ -145,9 +145,9 @@ object Events {
    * Defines a observe event
    *
    * @param info event related information
-   * @param items an optional initial set of items (keys with values)
+   * @param paramSet an optional initial set of parameters (keys with values)
    */
-  case class ObserveEvent(info: EventInfo, items: ParameterSet = Set.empty[Parameter[_]])
+  case class ObserveEvent(info: EventInfo, paramSet: ParameterSet = Set.empty[Parameter[_]])
       extends EventType[ObserveEvent] with EventServiceEvent {
 
     // Java API
@@ -157,7 +157,7 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[I <: Parameter[_]](item: I): ObserveEvent = super.add(item)
+    override def add[I <: Parameter[_]](param: I): ObserveEvent = super.add(param)
 
     override def remove[S, I <: Parameter[S]](key: Key[S, I]): ObserveEvent = super.remove(key)
   }
@@ -172,9 +172,9 @@ object Events {
    * Defines a system event
    *
    * @param info event related information
-   * @param items an optional initial set of items (keys with values)
+   * @param paramSet an optional initial set of parameters (keys with values)
    */
-  case class SystemEvent(info: EventInfo, items: ParameterSet = Set.empty[Parameter[_]])
+  case class SystemEvent(info: EventInfo, paramSet: ParameterSet = Set.empty[Parameter[_]])
       extends EventType[SystemEvent] with EventServiceEvent {
 
     // Java API
@@ -184,7 +184,7 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[I <: Parameter[_]](item: I): SystemEvent = super.add(item)
+    override def add[I <: Parameter[_]](param: I): SystemEvent = super.add(param)
 
     override def remove[S, I <: Parameter[S]](key: Key[S, I]): SystemEvent = super.remove(key)
   }

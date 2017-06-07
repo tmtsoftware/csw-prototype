@@ -5,9 +5,9 @@ import csw.util.config.StringKey
 val filterPrefix = "tcs.mobie.blue.filter"
 val filterKey = StringKey("filter")
 val a1 = resolveAssembly("Assembly-1")
-val config = SetupConfig(filterPrefix).set(filterKey, "Y_G0323")
+val config = Setup(filterPrefix).set(filterKey, "Y_G0323")
 val obsId = "obs001" // should be actual obsId
-val configArg = SetupConfigArg(obsId, config)
+val configArg = Setup(obsId, config)
 val s = a1.submit(configArg)
 val currentState = a1.configGet()
 

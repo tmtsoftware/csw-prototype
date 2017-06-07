@@ -42,14 +42,14 @@ the contents of the Seq object.
     a1: csw.services.ccs.BlockingAssemblyClient = BlockingAssemblyClient(AssemblyClient(Actor[akka.tcp://Assembly-1-system@192.168.2.2:61574/user/Assembly-1-supervisor#557963416]))
     
     // Create a configuration to submit to the assembly
-    seq> val config = SetupConfig(filterPrefix).set(filter, "Y_G0323")
-    config: csw.util.cfg.Configurations.SetupConfig = SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)
+    seq> val config = Setup(filterPrefix).set(filter, "Y_G0323")
+    config: csw.util.cfg.Configurations.Setup = SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)
 
     seq> val obsId = "obs001" // should be actual obsId
     obsId: String = obs001
     
-    seq> val configArg = SetupConfigArg(obsId, config)
-    configArg: csw.util.cfg.Configurations.SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obs001)),WrappedArray(SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)))
+    seq> val configArg = Setup(obsId, config)
+    configArg: csw.util.cfg.Configurations.SetupArg = SetupArg(ConfigInfo(ObsId(obs001)),WrappedArray(SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)))
 
     // Submit the configuration to the assembly
     seq> val s = a1.submit(configArg)
@@ -57,15 +57,15 @@ the contents of the Seq object.
     
     // Get the current values from the assembly
     seq> a1.configGet()
-    res3: csw.util.cfg.Configurations.SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obs001)),ArrayBuffer(SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)))
+    res3: csw.util.cfg.Configurations.SetupArg = SetupArg(ConfigInfo(ObsId(obs001)),ArrayBuffer(SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)))
     
     // Set the filter to None
-    seq> a1.submit(SetupConfigArg(obsId, config.set(filter, "None")))
+    seq> a1.submit(SetupArg(obsId, config.set(filter, "None")))
     res5: csw.services.ccs.CommandStatus = Completed(RunId(3c35f05d-6fe0-4c4d-a8a2-434cdc5ac39b))
 
     // Check that the filter is now set to None
     seq> a1.configGet(configArg)
-    res6: csw.util.cfg.Configurations.SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obs001)),ArrayBuffer(SC[TCS, tcs.mobie.blue.filter](filter -> None)))
+    res6: csw.util.cfg.Configurations.SetupArg = SetupArg(ConfigInfo(ObsId(obs001)),ArrayBuffer(SC[TCS, tcs.mobie.blue.filter](filter -> None)))
 
     // Get a reference to a container named Container-2-opc (from the csw-opc-demo)
     seq> val c2 = resolveContainer("Container-2-opc")
@@ -76,13 +76,13 @@ the contents of the Seq object.
     seq> c2.stop
 
     // Submitting a config to the assembly times out now, since the target container is stopped
-    seq> a1.submit(SetupConfigArg(obsId, config.set(filter, "Y_G0323")))
+    seq> a1.submit(SetupArg(obsId, config.set(filter, "Y_G0323")))
     java.util.concurrent.TimeoutException: Futures timed out after [60 seconds]
 
     seq> c2.restart
 
     // Now submits work again, since the container was restarted
-    seq> a1.submit(SetupConfigArg(obsId, config.set(filter, "Y_G0323")))
+    seq> a1.submit(SetupArg(obsId, config.set(filter, "Y_G0323")))
     res10: csw.services.ccs.CommandStatus = Completed(RunId(d6299aaa-7e59-4486-aa31-1e2cc228883f))
 
     // Shutdown the container

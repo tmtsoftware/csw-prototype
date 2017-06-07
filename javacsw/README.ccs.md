@@ -35,7 +35,7 @@ Here is an example HCD controller:
 
         // Send the config to the worker for processing
         @Override
-        public void process(SetupConfig config) {
+        public void process(Setup config) {
             worker.tell(config, self());
         }
 

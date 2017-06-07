@@ -1,4 +1,4 @@
-package javacsw.util.itemSet.tests;
+package javacsw.util.params.tests;
 
 import csw.util.param.*;
 import csw.util.param.Parameters.Observe;
@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import java.util.*;
 
-import static javacsw.util.itemSet.JItems.*;
-import static javacsw.util.itemSet.JConfigDSL.*;
+import static javacsw.util.params.JParameters.*;
+import static javacsw.util.params.JParameterSetDSL.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -34,7 +34,7 @@ public class JParameterSetDslTests {
   private static final Parameters.CommandInfo info = new CommandInfo("Obs001");
 
   @Test
-  public void testSetupConfig() {
+  public void testSetup() {
     Setup sc1 = jadd(sc(info, ck3), jset(k1, 22), jset(k2, 44));
     assertTrue(sc1.size() == 2);
     assertTrue(sc1.exists(k1));
@@ -44,7 +44,7 @@ public class JParameterSetDslTests {
   }
 
   @Test
-  public void testSetupConfigWithMatrix() {
+  public void testSetupWithMatrix() {
     double[][] m1 = {{1., 2., 3.}, {4., 5., 6.}, {7., 8., 9.}};
     DoubleMatrix dm1 = DoubleMatrix(m1);
     Setup sc1 = jadd(sc(info, ck3), jset(k4, dm1));
@@ -56,7 +56,7 @@ public class JParameterSetDslTests {
   }
 
   @Test
-  public void testObserveConfig() {
+  public void testObserve() {
     Observe oc1 = jadd(oc(info, ck3), jset(k1, 22), jset(k2, 44));
     assertTrue(oc1.size() == 2);
     assertTrue(oc1.exists(k1));

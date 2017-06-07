@@ -14,7 +14,7 @@ import scala.language.implicitConversions
  */
 final case class BooleanParameter(keyName: String, values: Vector[Boolean], units: Units) extends Parameter[Boolean] {
 
-  override def withUnits(unitsIn: Units) = copy(units = unitsIn)
+  override def withUnits(unitsIn: Units): BooleanParameter = copy(units = unitsIn)
 }
 
 /**

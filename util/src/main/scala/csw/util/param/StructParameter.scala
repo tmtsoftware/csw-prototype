@@ -22,9 +22,9 @@ final case class StructKey(nameIn: String) extends Key[Struct, StructParameter](
  * A configuration for setting telescope and instrument parameters
  *
  * @param name   name for the struct
- * @param items an optional initial set of items (keys with values)
+ * @param paramSet an optional initial set of items (keys with values)
  */
-case class Struct(name: String, items: ParameterSet = Set.empty[Parameter[_]]) extends ParameterSetType[Struct] {
+case class Struct(name: String, paramSet: ParameterSet = Set.empty[Parameter[_]]) extends ParameterSetType[Struct] {
 
   /**
    * This is here for Java to construct with String
@@ -33,7 +33,7 @@ case class Struct(name: String, items: ParameterSet = Set.empty[Parameter[_]]) e
 
   override def create(data: ParameterSet) = Struct(name, data)
 
-  def dataToString1 = items.mkString("(", ", ", ")")
+  def dataToString1 = paramSet.mkString("(", ", ", ")")
 
   override def toString = s"$name { $dataToString1 }"
 }

@@ -1,4 +1,4 @@
-package javacsw.util.itemSet;
+package javacsw.util.params;
 
 import csw.util.param.Subsystem;
 import csw.util.param.Subsystem.*;

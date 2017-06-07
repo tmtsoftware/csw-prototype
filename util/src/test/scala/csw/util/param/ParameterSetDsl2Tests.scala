@@ -9,13 +9,13 @@ import csw.util.param.Parameters.{CommandInfo, Setup}
  */
 class ParameterSetDsl2Tests extends FunSpec {
 
-  val itemSetInfo = CommandInfo(ObsId("Obs001"))
+  val commandInfo = CommandInfo(ObsId("Obs001"))
 
   describe("checking arrow notation") {
     val zeroPoint = IntKey("zeroPoint")
 
     it("should work with an sc") {
-      val defaultMoveSC = Setup(itemSetInfo, "test").add(zeroPoint -> 0)
+      val defaultMoveSC = Setup(commandInfo, "test").add(zeroPoint -> 0)
     }
   }
 
@@ -56,7 +56,7 @@ class ParameterSetDsl2Tests extends FunSpec {
     it("should support key -> value syntax for building configs") {
       val dm1 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
       val setupConfig1 = sc(
-        itemSetInfo,
+        commandInfo,
         "test",
         k1 -> Vector(1, 2, 3) withUnits UnitsOfMeasure.degrees,
         k2 -> Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.meters,
@@ -71,7 +71,7 @@ class ParameterSetDsl2Tests extends FunSpec {
       assert(setupConfig1.get(k4).get.head(0, 0) == 1)
 
       val setupConfig2 = sc(
-        itemSetInfo,
+        commandInfo,
         "test",
         k1 -> 1 withUnits UnitsOfMeasure.degrees,
         k2 -> (2.0, UnitsOfMeasure.meters),

@@ -38,7 +38,7 @@ Example HCD Controller Usage
     val worker = context.actorOf(TestWorker.props())
 
     // Send the config to the worker for processing
-    override protected def process(config: SetupConfig): Unit = {
+    override protected def process(config: Setup): Unit = {
       worker ! config
     }
 

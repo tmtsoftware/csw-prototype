@@ -46,7 +46,7 @@ public class JHcdControllerTests {
 
         // Send the config to the worker for processing
         @Override
-        public void process(SetupConfig config) {
+        public void process(Setup config) {
             worker.tell(config, self());
         }
 
@@ -100,7 +100,7 @@ public class JHcdControllerTests {
 
         public TestWorker() {
             receive(ReceiveBuilder.
-                    match(Setup.class, this::handleSetupConfig).
+                    match(Setup.class, this::handleSetup).
                     match(RequestCurrentState.class, rcs -> handleRequestCurrentState()).
                     match(WorkDone.class, wd -> handleWorkDone(wd.config)).
                     matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -108,7 +108,7 @@ public class JHcdControllerTests {
         }
 
         // Simulate doing work
-        private void handleSetupConfig(Setup config) {
+        private void handleSetup(Setup config) {
             log.debug("Start processing " + config);
             FiniteDuration d = FiniteDuration.create(2, TimeUnit.SECONDS);
             getContext().system().scheduler().scheduleOnce(d, self(), new WorkDone(config), system.dispatcher(), null);

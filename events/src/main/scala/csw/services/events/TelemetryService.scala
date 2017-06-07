@@ -6,7 +6,7 @@ import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
-import csw.util.param.ItemSetSerializer.{read, write}
+import csw.util.param.ParamSetSerializer.{read, write}
 import csw.util.param.Events.StatusEvent
 import redis.{ByteStringFormatter, RedisClient}
 

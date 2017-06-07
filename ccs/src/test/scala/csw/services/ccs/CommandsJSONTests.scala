@@ -14,7 +14,7 @@ import spray.json._
 class CommandsJSONTests extends FunSpec with LazyLogging {
   import CommandsJSON._
 
-  val itemSetInfo = CommandInfo(ObsId("001"))
+  val commandInfo = CommandInfo(ObsId("001"))
 
   describe("Overall Tests") {
     it("should work with validation issues") {
@@ -66,7 +66,7 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val sc = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
+      val sc = Setup(commandInfo, "wfos.blue.det").madd(i1, i2)
 
       csIn = Aborted
       json = csIn.toJson
@@ -86,7 +86,7 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val scIn: SequenceCommand = Setup(itemSetInfo, "wfos.blue.det").madd(i1, i2)
+      val scIn: SequenceCommand = Setup(commandInfo, "wfos.blue.det").madd(i1, i2)
 
       val json = scIn.toJson
       logger.info(s"json: ${json.prettyPrint}")
