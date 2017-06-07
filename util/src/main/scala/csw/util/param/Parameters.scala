@@ -434,7 +434,7 @@ object Parameters {
   }
 
   /**
-   * Contains a list of parameter sets that can be sent to a sequencer
+   * Contains a list of commands that can be sent to a sequencer
    */
   final case class CommandList(paramSets: Seq[SequenceCommand])
 

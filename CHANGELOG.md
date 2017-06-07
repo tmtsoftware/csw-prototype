@@ -3,6 +3,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Removed classes combining multiple configurations (SetupConfigArg, ObserveArg) and
+  changed the API for assembly component actors to receive a Submit object with a 
+  single Setup or Observe
+
+- Name changes to avoid overloading the term `configuration`:
+  The csw.util.config package has been renamed to csw.util.param (and javacsw.util.param).
+
+  | Old Name  | New Name |
+  | ------------- | ------------- |
+  | Configurations  | Parameters  |
+  | ConfigKey  | Prefix  |
+  | ControlItemSet  | ControlCommand  |
+  | SequenceItemSet  | SequencerCommand  |
+  | ConfigData  | ParameterSet |
+  | Item  | Parameter |
+  | ConfigType  | ParameterSetType  |
+  | ConfigFilters  | ParameterSetFilters  |
+  | ConfigKeyType  | ParameterSetKeyData  |
+  | item() | parameter()  |
+  | sc()  | setup()   |
+  | oc()  | observe()   |
+
+* Setups and Observes now take a CommandInfo object as a first argument 
+
+* New CommandList object for future use with sequencer
+
 ## [CSW v0.3-PDR] - 2016-12-03
 
 ### Added
