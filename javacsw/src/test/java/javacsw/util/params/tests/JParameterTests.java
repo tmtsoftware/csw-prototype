@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.*;
 /**
  * Tests the Java API to the config classes
  */
-@SuppressWarnings({"OptionalGetWithoutIsPresent", "unused"})
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "unused", "ConstantConditions"})
 public class JParameterTests {
   private static final String s1 = "encoder";
   private static final String s2 = "filter";

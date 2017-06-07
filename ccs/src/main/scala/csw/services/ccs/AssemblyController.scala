@@ -18,9 +18,9 @@ object AssemblyController {
    * When the work for the config has been completed, a Completed message is sent
    * (or an Error message, if an error occurred).
    *
-   * @param itemset the configuration to execute
+   * @param command the configuration to execute
    */
-  case class Submit(itemset: ControlCommand) extends AssemblyControllerMessage
+  case class Submit(command: ControlCommand) extends AssemblyControllerMessage
 
   /**
    * Message to submit a oneway config to the assembly.
@@ -28,9 +28,9 @@ object AssemblyController {
    * indicating that config is valid (or invalid).
    * There will be no messages on completion.
    *
-   * @param itemset the configuration to execute
+   * @param command the configuration to execute
    */
-  case class OneWay(itemset: ControlCommand) extends AssemblyControllerMessage
+  case class OneWay(command: ControlCommand) extends AssemblyControllerMessage
 
 }
 
@@ -46,14 +46,14 @@ trait AssemblyController {
    * Receive actor messages
    */
   protected def controllerReceive: Receive = {
-    case Submit(controlItemSet) =>
-      controlItemSet match {
+    case Submit(controlCommand) =>
+      controlCommand match {
         case si: Setup   => setupSubmit(si, oneway = false, sender())
         case oi: Observe => observeSubmit(oi, oneway = false, sender())
       }
 
-    case OneWay(controlItemSet) =>
-      controlItemSet match {
+    case OneWay(controlCommand) =>
+      controlCommand match {
         case sca: Setup   => setupSubmit(sca, oneway = true, sender())
         case oca: Observe => observeSubmit(oca, oneway = true, sender())
       }

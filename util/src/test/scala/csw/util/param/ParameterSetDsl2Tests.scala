@@ -1,7 +1,7 @@
 package csw.util.param
 
 import org.scalatest.FunSpec
-import csw.util.param.ItemSetDsl._
+import csw.util.param.ParameterSetDsl._
 import csw.util.param.Parameters.{CommandInfo, Setup}
 
 /**

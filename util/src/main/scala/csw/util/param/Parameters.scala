@@ -5,32 +5,32 @@ import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
 /**
-  * Support for sets of generic, type-safe command or event parameters
-  * (key/value objects with units)
-  */
+ * Support for sets of generic, type-safe command or event parameters
+ * (key/value objects with units)
+ */
 object Parameters {
 
   /**
-    * Combines subsystem and the subsystem's prefix
-    *
-    * @param subsystem the subsystem that is the target of the command
-    * @param prefix    the subsystem's prefix
-    */
+   * Combines subsystem and the subsystem's prefix
+   *
+   * @param subsystem the subsystem that is the target of the command
+   * @param prefix    the subsystem's prefix
+   */
   case class Prefix(subsystem: Subsystem, prefix: String) {
     override def toString = s"[$subsystem, $prefix]"
   }
 
   /**
-    * A top level key for a parameter set: combines subsystem and the subsystem's prefix
-    */
+   * A top level key for a parameter set: combines subsystem and the subsystem's prefix
+   */
   object Prefix {
     private val SEPARATOR = '.'
 
     /**
-      * Creates a Prefix from the given string
-      *
-      * @return an Prefix object parsed for the subsystem and prefix
-      */
+     * Creates a Prefix from the given string
+     *
+     * @return an Prefix object parsed for the subsystem and prefix
+     */
     implicit def stringToPrefix(prefix: String): Prefix = Prefix(subsystem(prefix), prefix)
 
     private def subsystem(keyText: String): Subsystem = {
@@ -42,61 +42,61 @@ object Parameters {
   type ParameterSet = Set[Parameter[_]]
 
   /**
-    * A trait to be mixed in that provides a parameter set and prefix info
-    */
+   * A trait to be mixed in that provides a parameter set and prefix info
+   */
   trait ParameterSetKeyData {
     self: ParameterSetType[_] =>
     /**
-      * Returns an object providing the subsystem and prefix for the parameter set
-      */
+     * Returns an object providing the subsystem and prefix for the parameter set
+     */
     def prefix: Prefix
 
     /**
-      * The subsystem for the parameter set
-      */
+     * The subsystem for the parameter set
+     */
     final def subsystem: Subsystem = prefix.subsystem
 
     /**
-      * The prefix for the parameter set
-      */
+     * The prefix for the parameter set
+     */
     final def prefixStr: String = prefix.prefix
 
     override def toString = s"$typeName[$subsystem, $prefixStr]$dataToString"
   }
 
   /**
-    * The base trait for various parameter set types (commands or events)
-    *
-    * @tparam T the subclass of ParameterSetType
-    */
+   * The base trait for various parameter set types (commands or events)
+   *
+   * @tparam T the subclass of ParameterSetType
+   */
   trait ParameterSetType[T <: ParameterSetType[T]] {
     self: T =>
 
     /**
-      * A name identifying the type of parameter set, such as "setup", "observe".
-      * This is used in the JSON and toString output.
-      */
+     * A name identifying the type of parameter set, such as "setup", "observe".
+     * This is used in the JSON and toString output.
+     */
     def typeName: String = getClass.getSimpleName
 
     /**
-      * Holds the parameters for this parameter set
-      */
+     * Holds the parameters for this parameter set
+     */
     def paramSet: ParameterSet
 
     /**
-      * The number of parameters in this parameter set
-      *
-      * @return the number of parameters in the parameter set
-      */
+     * The number of parameters in this parameter set
+     *
+     * @return the number of parameters in the parameter set
+     */
     def size: Int = paramSet.size
 
     /**
-      * Adds a parameter to the parameter set
-      *
-      * @param parameter the parameter to add
-      * @tparam P the Parameter type
-      * @return a new instance of this parameter set with the given parameter added
-      */
+     * Adds a parameter to the parameter set
+     *
+     * @param parameter the parameter to add
+     * @tparam P the Parameter type
+     * @return a new instance of this parameter set with the given parameter added
+     */
     def add[P <: Parameter[_]](parameter: P): T = doAdd(this, parameter)
 
     private def doAdd[P <: Parameter[_]](c: T, parameter: P): T = {
@@ -105,113 +105,113 @@ object Parameters {
     }
 
     /**
-      * Adds several parameters to the parameter set
-      *
-      * @param parametersToAdd the list of parameters to add to the parameter set
-      * @tparam P must be a subclass of Parameter
-      * @return a new instance of this parameter set with the given parameter added
-      */
+     * Adds several parameters to the parameter set
+     *
+     * @param parametersToAdd the list of parameters to add to the parameter set
+     * @tparam P must be a subclass of Parameter
+     * @return a new instance of this parameter set with the given parameter added
+     */
     def madd[P <: Parameter[_]](parametersToAdd: P*): T = parametersToAdd.foldLeft(this)((c, parameter) => doAdd(c, parameter))
 
     /**
-      * Returns an Option with the parameter for the key if found, otherwise None
-      *
-      * @param key the Key to be used for lookup
-      * @return the parameter for the key, if found
-      * @tparam S the Scala value type
-      * @tparam P the parameter type for the Scala value S
-      */
+     * Returns an Option with the parameter for the key if found, otherwise None
+     *
+     * @param key the Key to be used for lookup
+     * @return the parameter for the key, if found
+     * @tparam S the Scala value type
+     * @tparam P the parameter type for the Scala value S
+     */
     def get[S, P <: Parameter[S]](key: Key[S, P]): Option[P] = getByKeyname[P](paramSet, key.keyName)
 
     /**
-      * Returns an Option with the parameter for the key if found, otherwise None. Access with keyname rather
-      * than Key
-      *
-      * @param keyName the keyname to be used for the lookup
-      * @tparam P the value type
-      */
+     * Returns an Option with the parameter for the key if found, otherwise None. Access with keyname rather
+     * than Key
+     *
+     * @param keyName the keyname to be used for the lookup
+     * @tparam P the value type
+     */
     def getByName[P <: Parameter[_]](keyName: String): Option[P] = getByKeyname[P](paramSet, keyName)
 
     def find[P <: Parameter[_]](parameter: P): Option[P] = getByKeyname[P](paramSet, parameter.keyName)
 
     /**
-      * Return the parameter associated with a Key rather than an Option
-      *
-      * @param key the Key to be used for lookup
-      * @tparam S the Scala value type
-      * @tparam P the Parameter type associated with S
-      * @return the parameter associated with the Key or a NoSuchElementException if the key does not exist
-      */
+     * Return the parameter associated with a Key rather than an Option
+     *
+     * @param key the Key to be used for lookup
+     * @tparam S the Scala value type
+     * @tparam P the Parameter type associated with S
+     * @return the parameter associated with the Key or a NoSuchElementException if the key does not exist
+     */
     final def apply[S, P <: Parameter[S]](key: Key[S, P]): P = get(key).get
 
     /**
-      * Returns the actual parameter associated with a key
-      *
-      * @param key the Key to be used for lookup
-      * @tparam S the Scala value type
-      * @tparam P the Parameter type associated with S
-      * @return the parameter associated with the key or a NoSuchElementException if the key does not exist
-      */
+     * Returns the actual parameter associated with a key
+     *
+     * @param key the Key to be used for lookup
+     * @tparam S the Scala value type
+     * @tparam P the Parameter type associated with S
+     * @return the parameter associated with the key or a NoSuchElementException if the key does not exist
+     */
     final def parameter[S, P <: Parameter[S]](key: Key[S, P]): P = get(key).get
 
     /**
-      * Returns true if the key exists in the parameter set
-      *
-      * @param key the key to check for
-      * @return true if the key is found
-      * @tparam S the Scala value type
-      * @tparam P the type of the Parameter associated with the key
-      */
+     * Returns true if the key exists in the parameter set
+     *
+     * @param key the key to check for
+     * @return true if the key is found
+     * @tparam S the Scala value type
+     * @tparam P the type of the Parameter associated with the key
+     */
     def exists[S, P <: Parameter[S]](key: Key[S, P]): Boolean = get(key).isDefined
 
     /**
-      * Remove a parameter from the parameter set by key
-      *
-      * @param key the Key to be used for removal
-      * @tparam S the Scala value type
-      * @tparam P the parameter type used with Scala type S
-      * @return a new T, where T is a parameter set child with the key removed or identical if the key is not present
-      */
+     * Remove a parameter from the parameter set by key
+     *
+     * @param key the Key to be used for removal
+     * @tparam S the Scala value type
+     * @tparam P the parameter type used with Scala type S
+     * @return a new T, where T is a parameter set child with the key removed or identical if the key is not present
+     */
     def remove[S, P <: Parameter[S]](key: Key[S, P]): T = removeByKeyname(this, key.keyName) //doRemove(this, key)
 
     /**
-      * Removes a parameter based on the parameter
-      *
-      * @param parameter to be removed from the parameter set
-      * @tparam P the type of the parameter to be removed
-      * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not present
-      */
+     * Removes a parameter based on the parameter
+     *
+     * @param parameter to be removed from the parameter set
+     * @tparam P the type of the parameter to be removed
+     * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not present
+     */
     def remove[P <: Parameter[_]](parameter: P): T = removeByParameter(this, parameter)
 
     /**
-      * Function removes a parameter from the parameter set c based on keyname
-      *
-      * @param c       the parameter set to remove from
-      * @param keyname the key name of the parameter to remove
-      * @tparam P the Parameter type
-      * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not present
-      */
+     * Function removes a parameter from the parameter set c based on keyname
+     *
+     * @param c       the parameter set to remove from
+     * @param keyname the key name of the parameter to remove
+     * @tparam P the Parameter type
+     * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not present
+     */
     private def removeByKeyname[P <: Parameter[_]](c: ParameterSetType[T], keyname: String): T = {
       val f: Option[P] = getByKeyname(c.paramSet, keyname)
       f match {
         case Some(parameter) => create(c.paramSet.-(parameter))
-        case None => c.asInstanceOf[T] //create(c.parameters) also works
+        case None            => c.asInstanceOf[T] //create(c.parameters) also works
       }
     }
 
     /**
-      * Function removes a parameter from the parameter set c based on parameter content
-      *
-      * @param c           the parameter set to remove from
-      * @param parameterIn the parameter that should be removed
-      * @tparam P the Parameter type
-      * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not presen
-      */
+     * Function removes a parameter from the parameter set c based on parameter content
+     *
+     * @param c           the parameter set to remove from
+     * @param parameterIn the parameter that should be removed
+     * @tparam P the Parameter type
+     * @return a new T, where T is a parameter set child with the parameter removed or identical if the parameter is not presen
+     */
     private def removeByParameter[P <: Parameter[_]](c: ParameterSetType[T], parameterIn: P): T = {
       val f: Option[P] = getByParameter(c.paramSet, parameterIn)
       f match {
         case Some(parameter) => create(c.paramSet.-(parameter))
-        case None => c.asInstanceOf[T]
+        case None            => c.asInstanceOf[T]
       }
     }
 
@@ -224,8 +224,8 @@ object Parameters {
       parametersIn.find(_.equals(parameter)).asInstanceOf[Option[P]]
 
     /**
-      * Method called by subclass to create a copy with the same key (or other fields) and new parameters
-      */
+     * Method called by subclass to create a copy with the same key (or other fields) and new parameters
+     */
     protected def create(data: ParameterSet): T
 
     protected def dataToString: String = paramSet.mkString("(", ",", ")")
@@ -233,15 +233,15 @@ object Parameters {
     override def toString = s"$typeName$dataToString"
 
     /**
-      * Returns true if the data contains the given key
-      */
+     * Returns true if the data contains the given key
+     */
     def contains(key: Key[_, _]): Boolean = paramSet.exists(_.keyName == key.keyName)
 
     /**
-      * Returns a set containing the names of any of the given keys that are missing in the data
-      *
-      * @param keys one or more keys
-      */
+     * Returns a set containing the names of any of the given keys that are missing in the data
+     *
+     * @param keys one or more keys
+     */
     def missingKeys(keys: Key[_, _]*): Set[String] = {
       val argKeySet = keys.map(_.keyName).toSet
       val parametersKeySet = paramSet.map(_.keyName)
@@ -249,33 +249,33 @@ object Parameters {
     }
 
     /**
-      * java API: Returns a set containing the names of any of the given keys that are missing in the data
-      *
-      * @param keys one or more keys
-      */
+     * java API: Returns a set containing the names of any of the given keys that are missing in the data
+     *
+     * @param keys one or more keys
+     */
     @varargs
     def jMissingKeys(keys: Key[_, _]*): java.util.Set[String] = missingKeys(keys: _*).asJava
 
     /**
-      * Returns a map based on this object where the keys and values are in string format
-      * (Could be useful for exporting in a format that other languages can read).
-      * Derived classes might want to add values to this map for fixed fields.
-      */
+     * Returns a map based on this object where the keys and values are in string format
+     * (Could be useful for exporting in a format that other languages can read).
+     * Derived classes might want to add values to this map for fixed fields.
+     */
     def getStringMap: Map[String, String] = paramSet.map(i => i.keyName -> i.values.map(_.toString).mkString(",")).toMap
   }
 
   /**
-    * This will include information related to the observation that is tied to a parameter set
-    * This will grow and develop.
-    *
-    * @param obsId the observation id
-    * @param runId unique ID for this parameter set
-    */
+   * This will include information related to the observation that is tied to a parameter set
+   * This will grow and develop.
+   *
+   * @param obsId the observation id
+   * @param runId unique ID for this parameter set
+   */
   case class CommandInfo(obsId: ObsId, runId: RunId = RunId()) {
 
     /**
-      * Creates an instance with the given obsId and a unique runId
-      */
+     * Creates an instance with the given obsId and a unique runId
+     */
     def this(obsId: String) = this(ObsId(obsId))
   }
 
@@ -284,50 +284,50 @@ object Parameters {
   }
 
   /**
-    * Common trait for Setup, Observe and Wait commands
-    */
+   * Common trait for Setup, Observe and Wait commands
+   */
   sealed trait Command {
     /**
-      * A name identifying the type of parameter set, such as "setup", "observe".
-      * This is used in the JSON and toString output.
-      */
+     * A name identifying the type of parameter set, such as "setup", "observe".
+     * This is used in the JSON and toString output.
+     */
     def typeName: String
 
     /**
-      * information related to the parameter set
-      */
+     * information related to the parameter set
+     */
     val info: CommandInfo
 
     /**
-      * identifies the target subsystem
-      */
+     * identifies the target subsystem
+     */
     val prefix: Prefix
 
     /**
-      * an optional initial set of parameters (keys with values)
-      */
+     * an optional initial set of parameters (keys with values)
+     */
     val paramSet: ParameterSet
   }
 
   /**
-    * Trait for sequence parameter sets
-    */
+   * Trait for sequence parameter sets
+   */
   sealed trait SequenceCommand extends Command
 
   /**
-    * Marker trait for control parameter sets
-    */
+   * Marker trait for control parameter sets
+   */
   sealed trait ControlCommand extends Command
 
   /**
-    * a parameter set for setting telescope and instrument parameters
-    *
-    * @param info     information related to the parameter set
-    * @param prefix   identifies the target subsystem
-    * @param paramSet an optional initial set of parameters (keys with values)
-    */
+   * a parameter set for setting telescope and instrument parameters
+   *
+   * @param info     information related to the parameter set
+   * @param prefix   identifies the target subsystem
+   * @param paramSet an optional initial set of parameters (keys with values)
+   */
   case class Setup(info: CommandInfo, prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
-    extends ParameterSetType[Setup] with ParameterSetKeyData with SequenceCommand with ControlCommand {
+      extends ParameterSetType[Setup] with ParameterSetKeyData with SequenceCommand with ControlCommand {
 
     override def create(data: ParameterSet) = Setup(info, prefix, data)
 
@@ -342,14 +342,14 @@ object Parameters {
   }
 
   /**
-    * a parameter set for setting observation parameters
-    *
-    * @param info     information related to the parameter set
-    * @param prefix   identifies the target subsystem
-    * @param paramSet an optional initial set of parameters (keys with values)
-    */
+   * a parameter set for setting observation parameters
+   *
+   * @param info     information related to the parameter set
+   * @param prefix   identifies the target subsystem
+   * @param paramSet an optional initial set of parameters (keys with values)
+   */
   case class Observe(info: CommandInfo, prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
-    extends ParameterSetType[Observe] with ParameterSetKeyData with SequenceCommand with ControlCommand {
+      extends ParameterSetType[Observe] with ParameterSetKeyData with SequenceCommand with ControlCommand {
 
     override def create(data: ParameterSet) = Observe(info, prefix, data)
 
@@ -364,14 +364,14 @@ object Parameters {
   }
 
   /**
-    * a parameter set indicating a pause in processing
-    *
-    * @param info     information related to the parameter set
-    * @param prefix   identifies the target subsystem
-    * @param paramSet an optional initial set of parameters (keys with values)
-    */
+   * a parameter set indicating a pause in processing
+   *
+   * @param info     information related to the parameter set
+   * @param prefix   identifies the target subsystem
+   * @param paramSet an optional initial set of parameters (keys with values)
+   */
   case class Wait(info: CommandInfo, prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
-    extends ParameterSetType[Wait] with ParameterSetKeyData with SequenceCommand {
+      extends ParameterSetType[Wait] with ParameterSetKeyData with SequenceCommand {
 
     override def create(data: ParameterSet) = Wait(info, prefix, data)
 
@@ -386,14 +386,14 @@ object Parameters {
   }
 
   /**
-    * A parameters set for returning results
-    *
-    * @param info     information related to the parameter set
-    * @param prefix   identifies the target subsystem
-    * @param paramSet an optional initial set of parameters (keys with values)
-    */
+   * A parameters set for returning results
+   *
+   * @param info     information related to the parameter set
+   * @param prefix   identifies the target subsystem
+   * @param paramSet an optional initial set of parameters (keys with values)
+   */
   case class Result(info: CommandInfo, prefix: Prefix, paramSet: ParameterSet = Set.empty[Parameter[_]])
-    extends ParameterSetType[Result] with ParameterSetKeyData {
+      extends ParameterSetType[Result] with ParameterSetKeyData {
 
     override def create(data: ParameterSet) = Result(info, prefix, data)
 
@@ -408,8 +408,8 @@ object Parameters {
   }
 
   /**
-    * Filters
-    */
+   * Filters
+   */
   object ParameterSetFilters {
     // A filter type for various parameter set data
     type ParamSetFilter[A] = A => Boolean
@@ -434,8 +434,8 @@ object Parameters {
   }
 
   /**
-    * Contains a list of parameter sets that can be sent to a sequencer
-    */
+   * Contains a list of parameter sets that can be sent to a sequencer
+   */
   final case class CommandList(paramSets: Seq[SequenceCommand])
 
 }

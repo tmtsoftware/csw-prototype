@@ -13,7 +13,7 @@ object StateVariable {
    */
   sealed trait StateVariable extends Serializable {
     /**
-     * A name identifying the type of itemSet, such as "setup", "observe".
+     * A name identifying the type of command, such as "setup", "observe".
      * This is used in the JSON and toString output.
      */
     def typeName: String
@@ -59,19 +59,19 @@ object StateVariable {
     /**
      * This is here for Java to construct with String
      */
-    def this(itemSetKey: String) = this(Prefix.stringToPrefix(itemSetKey))
+    def this(prefix: String) = this(Prefix.stringToPrefix(prefix))
 
     /**
-     * Java API to create a DemandState from a SetupItemSet
+     * Java API to create a DemandState from a Setup
      */
-    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.paramSet)
+    def this(command: Setup) = this(command.prefixStr, command.paramSet)
   }
 
   object DemandState {
     /**
-     * Converts a SetupItemSet to a DemandState
+     * Converts a Setup to a DemandState
      */
-    implicit def apply(itemSet: Setup): DemandState = DemandState(itemSet.prefixStr, itemSet.paramSet)
+    implicit def apply(command: Setup): DemandState = DemandState(command.prefixStr, command.paramSet)
   }
 
   /**
@@ -88,25 +88,25 @@ object StateVariable {
     /**
      * This is here for Java to construct with String
      */
-    def this(itemSetKey: String) = this(Prefix.stringToPrefix(itemSetKey))
+    def this(prefix: String) = this(Prefix.stringToPrefix(prefix))
 
     /**
-     * Java API to create a DemandState from a SetupItemSet
+     * Java API to create a DemandState from a Setup
      */
-    def this(itemSet: Setup) = this(itemSet.prefixStr, itemSet.paramSet)
+    def this(command: Setup) = this(command.prefixStr, command.paramSet)
 
   }
 
   object CurrentState {
     /**
-     * Converts a SetupItemSet to a CurrentState
+     * Converts a Setup to a CurrentState
      */
-    implicit def apply(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.paramSet)
+    implicit def apply(command: Setup): CurrentState = CurrentState(command.prefixStr, command.paramSet)
 
     /**
-     * Java API to create a CurrentState from a SetupItemSet
+     * Java API to create a CurrentState from a Setup
      */
-    def fromSetupItemSet(itemSet: Setup): CurrentState = CurrentState(itemSet.prefixStr, itemSet.paramSet)
+    def fromSetupCommand(command: Setup): CurrentState = CurrentState(command.prefixStr, command.paramSet)
   }
 
   /**

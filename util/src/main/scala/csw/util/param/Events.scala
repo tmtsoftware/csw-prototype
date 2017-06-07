@@ -49,18 +49,18 @@ object Events {
   }
 
   object EventInfo {
-    implicit def apply(prefix: String): EventInfo = {
-      val prefix: Prefix = prefix
+    implicit def apply(prefixStr: String): EventInfo = {
+      val prefix: Prefix = prefixStr
       EventInfo(prefix, EventTime.toCurrent, None)
     }
 
-    implicit def apply(prefix: String, time: EventTime): EventInfo = {
-      val prefix: Prefix = prefix
+    implicit def apply(prefixStr: String, time: EventTime): EventInfo = {
+      val prefix: Prefix = prefixStr
       EventInfo(prefix, time, None)
     }
 
-    implicit def apply(prefix: String, time: EventTime, obsId: ObsId): EventInfo = {
-      val prefix: Prefix = prefix
+    implicit def apply(prefixStr: String, time: EventTime, obsId: ObsId): EventInfo = {
+      val prefix: Prefix = prefixStr
       EventInfo(prefix, time, Some(obsId))
     }
 
@@ -109,9 +109,14 @@ object Events {
    */
   sealed trait EventServiceEvent {
     /**
-     * See prefix in EventType
+     * The event's prefix and subsystem
      */
-    def prefix: String
+    def prefix: Prefix
+
+    /**
+     * The event's prefix as a string
+     */
+    def source: String
   }
 
   /**

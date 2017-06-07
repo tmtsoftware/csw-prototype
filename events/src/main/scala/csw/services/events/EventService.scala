@@ -337,7 +337,7 @@ private[events] case class EventServiceImpl(redisClient: RedisClient, scope: Str
     // Serialize the event
     val formatter = implicitly[ByteStringFormatter[Event]]
     val bs = formatter.serialize(event)
-    val key = scopedKey(event.prefix)
+    val key = scopedKey(event.source)
     Future.sequence(List(redisClient.publish(key, bs), redisClient.set(key, bs))).map(_ => ())
   }
 

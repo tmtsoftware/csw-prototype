@@ -2,7 +2,7 @@ package csw.util.param
 
 import csw.util.param.UnitsOfMeasure.{NoUnits, degrees}
 import org.scalatest.{FunSpec, Matchers}
-import csw.util.param.ItemSetDsl._
+import csw.util.param.ParameterSetDsl._
 import csw.util.param.Parameters.{CommandInfo, Setup}
 
 /**
@@ -19,7 +19,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
   private val commandInfo = CommandInfo(ObsId("Obs001"))
 
   describe("creating items") {
-    import csw.util.param.ItemSetDsl.{size => ssize}
+    import csw.util.param.ParameterSetDsl.{size => ssize}
 
     val k1 = IntKey(s1)
     val detectorTemp = DoubleKey(s3)
@@ -45,7 +45,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
   }
 
   describe("checking simple values") {
-    import csw.util.param.ItemSetDsl.{value => svalue}
+    import csw.util.param.ParameterSetDsl.{value => svalue}
     val k1 = IntKey(s1)
 
     it("should have value access") {
@@ -146,9 +146,9 @@ class ParameterSetDslTests extends FunSpec with Matchers {
       val sc1 = madd(Setup(commandInfo, ck2), i1, i2, i3)
       sc1.size should be(3)
 
-      item(sc1, k1) should equal(i1)
-      item(sc1, k2) should equal(i2)
-      item(sc1, k3) should equal(i3)
+      parameter(sc1, k1) should equal(i1)
+      parameter(sc1, k2) should equal(i2)
+      parameter(sc1, k3) should equal(i3)
     }
 
     it("should throw NoSuchElementException if not present") {
@@ -162,7 +162,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
       exists(sc1, k4) shouldBe false
 
       intercept[NoSuchElementException] {
-        item(sc1, k4)
+        parameter(sc1, k4)
       }
     }
   }
@@ -374,8 +374,8 @@ class ParameterSetDslTests extends FunSpec with Matchers {
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
       exists(sc2, k2) shouldBe true
-      units(item(sc2, k1)) shouldBe UnitsOfMeasure.degrees
-      units(item(sc2, k2)) shouldBe UnitsOfMeasure.meters
+      units(parameter(sc2, k1)) shouldBe UnitsOfMeasure.degrees
+      units(parameter(sc2, k2)) shouldBe UnitsOfMeasure.meters
     }
   }
 
@@ -396,15 +396,15 @@ class ParameterSetDslTests extends FunSpec with Matchers {
       val intItem = sc1(zeroPoint)
 
       csize(sc1) shouldBe 3
-      item(sc1, zeroPoint) should equal(intItem)
-      head(item(sc1, zeroPoint)) should equal(2000)
-      item(sc1, filter) should equal(i2)
-      item(sc1, mode) should equal(i1)
+      parameter(sc1, zeroPoint) should equal(intItem)
+      head(parameter(sc1, zeroPoint)) should equal(2000)
+      parameter(sc1, filter) should equal(i2)
+      parameter(sc1, mode) should equal(i1)
 
       // Check that default has not changed
-      item(default, zeroPoint) should equal(i3)
-      item(default, filter) should equal(i2)
-      item(default, mode) should equal(i1)
+      parameter(default, zeroPoint) should equal(i3)
+      parameter(default, filter) should equal(i2)
+      parameter(default, mode) should equal(i1)
     }
   }
 }

@@ -136,7 +136,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
-    import csw.util.param.ItemSetDsl._
+    import csw.util.param.ParameterSetDsl._
     oe(
       prefix,
       eventNum -> num,

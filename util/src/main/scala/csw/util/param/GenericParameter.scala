@@ -50,7 +50,7 @@ case class GenericParameter[S: JsonFormat](typeName: String, keyName: String, va
    */
   def toJson: JsValue = {
     val valueFormat = implicitly[JsonFormat[S]]
-    val unitsFormat = ItemSetJson.unitsFormat
+    val unitsFormat = ParameterSetJson.unitsFormat
     JsObject(
       "keyName" -> JsString(keyName),
       "value" -> JsArray(values.map(valueFormat.write)),

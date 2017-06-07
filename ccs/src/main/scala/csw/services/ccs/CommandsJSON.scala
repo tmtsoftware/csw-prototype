@@ -44,7 +44,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
 
   private def issueToType(obj: ValidationIssue) = obj match {
     case _: Validation.MissingKeyIssue                   => missingKeyIssueType
-    case _: Validation.WrongPrefixIssue               => wrongPrefixIssueType
+    case _: Validation.WrongPrefixIssue                  => wrongPrefixIssueType
     case _: Validation.WrongItemTypeIssue                => wrongItemTypeIssueType
     case _: Validation.WrongUnitsIssue                   => wrongUnitsIssueType
     case _: Validation.WrongNumberOfItemsIssue           => wrongNumberOfItemsIssueType
@@ -67,7 +67,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
       case Seq(JsString(issue), JsString(reason)) =>
         issue match {
           case `missingKeyIssueType`                   => MissingKeyIssue(reason)
-          case `wrongPrefixIssueType`               => WrongPrefixIssue(reason)
+          case `wrongPrefixIssueType`                  => WrongPrefixIssue(reason)
           case `wrongItemTypeIssueType`                => WrongItemTypeIssue(reason)
           case `wrongUnitsIssueType`                   => WrongUnitsIssue(reason)
           case `wrongNumberOfItemsIssueType`           => WrongNumberOfItemsIssue(reason)
@@ -102,7 +102,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private val abortedCSType = CommandStatus.Aborted.toString
   private val cancelledCSType = CommandStatus.Cancelled.toString
 
-  import csw.util.param.ItemSetJson._
+  import csw.util.param.ParameterSetJson._
 
   private def getMessage(json: JsValue): String = {
     json.asJsObject.getFields(messageKey) match {
@@ -110,9 +110,9 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
     }
   }
 
-  private def getItemSet(json: JsValue): Setup = {
+  private def getCommand(json: JsValue): Setup = {
     json.asJsObject.getFields(resultKey) match {
-      case Seq(sc) => readSequenceItemSet(sc)
+      case Seq(sc) => readSequenceCommand(sc)
     }
   }
 
@@ -120,7 +120,7 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
 
   private def csWithMessage(statusType: String, message: String) = JsObject(statusTypeKey -> JsString(statusType), messageKey -> JsString(message))
 
-  private def csWithConfig(statusType: String, sc: Setup) = JsObject(statusTypeKey -> JsString(statusType), resultKey -> writeSequenceItemSet(sc))
+  private def csWithConfig(statusType: String, sc: Setup) = JsObject(statusTypeKey -> JsString(statusType), resultKey -> writeSequenceCommand(sc))
 
   private def csOnly(statusType: String) = JsObject(statusTypeKey -> JsString(statusType))
 
@@ -155,13 +155,13 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   }
 
   implicit def SequenceConfigJsonFormat: JsonFormat[SequenceCommand] = new JsonFormat[SequenceCommand] {
-    override def read(json: JsValue): SequenceCommand = readSequenceItemSet(json)
+    override def read(json: JsValue): SequenceCommand = readSequenceCommand(json)
 
     override def write(obj: SequenceCommand): JsValue = {
       obj match {
-        case sc: Setup   => writeSequenceItemSet(sc)
-        case oc: Observe => writeSequenceItemSet(oc)
-        case wc: Wait    => writeSequenceItemSet(wc)
+        case sc: Setup   => writeSequenceCommand(sc)
+        case oc: Observe => writeSequenceCommand(oc)
+        case wc: Wait    => writeSequenceCommand(wc)
       }
     }
   }
