@@ -360,12 +360,12 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
 
     it("should allow creation") {
-      val sc1 = sc(commandInfo, ck2, i1, i2)
+      val sc1 = setup(commandInfo, ck2, i1, i2)
       csize(sc1) should be(2)
       exists(sc1, k1) shouldBe true
       exists(sc1, k2) shouldBe true
 
-      val sc2 = sc(
+      val sc2 = setup(
         commandInfo,
         ck2,
         k1 -> 3 withUnits UnitsOfMeasure.degrees,
@@ -389,7 +389,7 @@ class ParameterSetDslTests extends FunSpec with Matchers {
     val i3 = set(zeroPoint, 1000) // Where home is
 
     it("should create overriding defaults") {
-      val default: Setup = sc(commandInfo, ck2, i1, i2, i3)
+      val default: Setup = setup(commandInfo, ck2, i1, i2, i3)
 
       val sc1 = add(default, zeroPoint -> 2000)
 

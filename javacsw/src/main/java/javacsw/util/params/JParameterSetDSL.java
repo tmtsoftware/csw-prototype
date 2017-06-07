@@ -17,7 +17,7 @@ public class JParameterSetDSL {
      * @param prefix identifies the target subsystem
      * @param parameters one or more parameters (keys with values and units)
      */
-    public static Setup sc(CommandInfo info, String prefix, Parameter<?>... parameters) {
+    public static Setup setup(CommandInfo info, String prefix, Parameter<?>... parameters) {
         return jadd((new Setup(info, prefix)), parameters);
     }
 
@@ -27,7 +27,7 @@ public class JParameterSetDSL {
      * @param prefix identifies the target subsystem
      * @param parameters one or more parameters (keys with values and units)
      */
-    public static Observe oc(CommandInfo info, String prefix, Parameter<?>... parameters) {
+    public static Observe observe(CommandInfo info, String prefix, Parameter<?>... parameters) {
         return jadd((new Observe(info, prefix)), parameters);
     }
 

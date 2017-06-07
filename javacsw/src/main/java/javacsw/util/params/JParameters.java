@@ -999,7 +999,7 @@ public class JParameters {
    * @param key The key for the item to be located
    * @param <S> The Scala type of the value
    * @param <I> The item type assocated with the Scala type
-   * @param <T> The type of the configuration sc
+   * @param <T> The type of the configuration setup
    * @return Optional item
    */
   public static <S, I extends Parameter<S>, T extends ParameterSetType<T>> Optional<I> jgetItem(T sc, Key<S, I> key) {

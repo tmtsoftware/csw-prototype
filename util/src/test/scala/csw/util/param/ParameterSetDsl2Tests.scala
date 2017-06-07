@@ -55,7 +55,7 @@ class ParameterSetDsl2Tests extends FunSpec {
 
     it("should support key -> value syntax for building configs") {
       val dm1 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
-      val setupConfig1 = sc(
+      val setupConfig1 = setup(
         commandInfo,
         "test",
         k1 -> Vector(1, 2, 3) withUnits UnitsOfMeasure.degrees,
@@ -70,7 +70,7 @@ class ParameterSetDsl2Tests extends FunSpec {
       assert(setupConfig1.get(k3).get.value(1) == "B")
       assert(setupConfig1.get(k4).get.head(0, 0) == 1)
 
-      val setupConfig2 = sc(
+      val setupConfig2 = setup(
         commandInfo,
         "test",
         k1 -> 1 withUnits UnitsOfMeasure.degrees,

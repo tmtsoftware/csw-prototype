@@ -171,7 +171,7 @@ object ParameterSetDsl {
    * @param parameters     0 or more parameters to be added during creation
    * @return a new Setup with the parameters added
    */
-  def sc(info: CommandInfo, prefix: Prefix, parameters: Parameter[_]*): Setup = Setup(info, prefix).madd(parameters: _*)
+  def setup(info: CommandInfo, prefix: Prefix, parameters: Parameter[_]*): Setup = Setup(info, prefix).madd(parameters: _*)
 
   /**
    * Create an Observe with a number of parameters
@@ -181,7 +181,7 @@ object ParameterSetDsl {
    * @param parameters     0 or more parameters to be added during creation
    * @return a new Observe with the parameters added
    */
-  def oc(info: CommandInfo, prefix: Prefix, parameters: Parameter[_]*): Observe = Observe(info, prefix).madd(parameters: _*)
+  def observe(info: CommandInfo, prefix: Prefix, parameters: Parameter[_]*): Observe = Observe(info, prefix).madd(parameters: _*)
 
   /**
    * Create a CurrentState with a number of parameters
