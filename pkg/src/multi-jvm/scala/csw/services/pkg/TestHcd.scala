@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 object TestHcd {
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: Setup)
+  case class WorkDone(command: Setup)
 }
 
 /**
@@ -31,19 +31,19 @@ case class TestHcd(info: HcdInfo, supervisor: ActorRef)
     case x => log.error(s"Unexpected message: ${x.getClass}")
   }
 
-  // Send the config to the worker for processing
-  override protected def process(config: Setup): Unit = {
-    context.actorOf(TestWorker.props(config, info.prefix))
+  // Send the command to the worker for processing
+  override protected def process(command: Setup): Unit = {
+    context.actorOf(TestWorker.props(command, info.prefix))
   }
 
 }
 
 // -- Test worker actor that simulates doing some work --
 object TestWorker {
-  def props(demand: Setup, prefix: String): Props = Props(classOf[TestWorker], demand, prefix)
+  def props(demand: Setup, prefix: String): Props = Props(new TestWorker(demand, prefix))
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: Setup)
+  case class WorkDone(command: Setup)
 }
 
 
@@ -58,9 +58,9 @@ class TestWorker(demand: Setup, prefix: String) extends Actor with ActorLogging 
   context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(demand))
 
   def receive: Receive = {
-    case WorkDone(config) =>
-      log.info(s"Publishing $config")
-      context.parent ! CurrentState(config)
+    case WorkDone(command) =>
+      log.info(s"Publishing $command")
+      context.parent ! CurrentState(command)
       context.stop(self)
   }
 }

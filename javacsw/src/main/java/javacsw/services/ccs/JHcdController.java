@@ -32,12 +32,12 @@ abstract public class JHcdController extends AbstractHcdController {
 
 
   /**
-   * Derived classes should process the given config and eventually either call
+   * Derived classes should process the given command and eventually either call
    * notifySubscribers() or send a CurrentState message to itself
    * (possibly from a worker actor) to indicate changes in the current HCD state.
    */
   @Override
-  public /*protected*/ abstract void process(Parameters.Setup config);
+  public /*protected*/ abstract void process(Parameters.Setup command);
 
   /**
    * A request to the implementing actor to publish the current state value

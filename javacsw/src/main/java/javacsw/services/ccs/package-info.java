@@ -24,9 +24,9 @@
  *          });
  *      }
  *
- *      // Send the config to the worker for processing
- *      public void process(Setup config) {
- *          worker.tell(config, self());
+ *      // Send the command to the worker for processing
+ *      public void process(Setup command) {
+ *          worker.tell(command, self());
  *      }
  *
  *      // Ask the worker actor to send us the current state (handled by parent trait)

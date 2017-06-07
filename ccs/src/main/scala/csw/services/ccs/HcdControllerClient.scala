@@ -17,6 +17,6 @@ class HcdControllerClient(hcdActorRef: ActorRef) extends PublisherActorClient(hc
   /**
    * Submits a configuration to the HCD
    */
-  def submit(config: Setup): Unit = hcdActorRef ! Submit(config)
+  def submit(command: Setup): Unit = hcdActorRef ! Submit(command)
 
 }

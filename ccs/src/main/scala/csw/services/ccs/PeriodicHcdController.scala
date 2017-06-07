@@ -85,7 +85,7 @@ trait PeriodicHcdController {
         timer.cancel()
       }
 
-    case Submit(config) => queue = queue.enqueue(config)
+    case Submit(command) => queue = queue.enqueue(command)
 
     //case x              => log.warning(s"Received unexpected message: $x")
   }
@@ -95,9 +95,9 @@ trait PeriodicHcdController {
    */
   protected def nextConfig: Option[Setup] = {
     if (queue.nonEmpty) {
-      val (config, q) = queue.dequeue
+      val (command, q) = queue.dequeue
       queue = q
-      Some(config)
+      Some(command)
     } else None
   }
 
@@ -124,7 +124,7 @@ trait PeriodicHcdController {
 
   /**
    * Periodic method to be implemented by the HCD or assembly.
-   * This method can use the nextConfig method to pop the next config from the queue
+   * This method can use the nextConfig method to pop the next command from the queue
    * and the EventService API (events) to set the demand and current values.
    */
   protected def process(): Unit

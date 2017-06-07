@@ -26,9 +26,9 @@ object HcdControllerTests {
     // (could also use a worker per job/message if needed)
     private val worker = context.actorOf(TestWorker.props())
 
-    // Send the config to the worker for processing
-    override protected def process(config: Setup): Unit = {
-      worker ! TestWorker.Work(config)
+    // Send the command to the worker for processing
+    override protected def process(command: Setup): Unit = {
+      worker ! TestWorker.Work(command)
     }
 
     // Ask the worker actor to send us the current state (handled by parent trait)
@@ -44,10 +44,10 @@ object HcdControllerTests {
     def props(): Props = Props(new TestWorker())
 
     // Work to do
-    case class Work(config: Setup)
+    case class Work(command: Setup)
 
     // Message sent to self to simulate work done
-    case class WorkDone(config: Setup)
+    case class WorkDone(command: Setup)
 
     // Message to request the current state values
     case object RequestCurrentState
@@ -64,18 +64,18 @@ object HcdControllerTests {
     private var currentState = initialState
 
     def receive: Receive = {
-      case Work(config) =>
+      case Work(command) =>
         // Simulate doing work
-        log.debug(s"Start processing $config")
-        context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
+        log.debug(s"Start processing $command")
+        context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(command))
 
       case RequestCurrentState =>
         log.debug(s"Requested current state")
         context.parent ! currentState
 
-      case WorkDone(config) =>
-        log.debug(s"Done processing $config")
-        currentState = CurrentState(config.prefixStr, config.paramSet)
+      case WorkDone(command) =>
+        log.debug(s"Done processing $command")
+        currentState = CurrentState(command.prefixStr, command.paramSet)
         context.parent ! currentState
 
       case x => log.error(s"Unexpected message $x")
@@ -98,11 +98,11 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
   test("Test non-periodic HCD controller") {
     val hcdController = system.actorOf(TestHcdController.props())
 
-    // Send a setup config to the HCD
+    // Send a setup command to the HCD
     val info = CommandInfo(ObsId("001"))
-    val config = Setup(info, testPrefix).add(position.set("IR3"))
-    hcdController ! Submit(config)
-    system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
+    val command = Setup(info, testPrefix).add(position.set("IR3"))
+    hcdController ! Submit(command)
+    system.actorOf(HcdStatusMatcherActor.props(List(command), Set(hcdController), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed.type]
       logger.debug(s"Done (2). Received reply from matcher with current state: $status")

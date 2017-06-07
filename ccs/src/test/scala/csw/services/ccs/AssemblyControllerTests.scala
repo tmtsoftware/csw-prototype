@@ -54,10 +54,10 @@ object AssemblyControllerTests {
     def props(): Props = Props(new TestWorker())
 
     // Work to do
-    case class Work(config: Setup, replyTo: Option[ActorRef])
+    case class Work(command: Setup, replyTo: Option[ActorRef])
 
     // Message sent to self to simulate work done
-    case class WorkDone(config: Setup, replyTo: Option[ActorRef])
+    case class WorkDone(command: Setup, replyTo: Option[ActorRef])
 
     // Message to request the current state values
     case object RequestCurrentState
@@ -73,13 +73,13 @@ object AssemblyControllerTests {
     //    private val initialState = CurrentState(testPrefix1).add(position.set("None"))
 
     def receive: Receive = {
-      case Work(config, replyTo) =>
+      case Work(command, replyTo) =>
         // Simulate doing work
-        log.debug(s"Start processing $config")
-        context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config, replyTo))
+        log.debug(s"Start processing $command")
+        context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(command, replyTo))
 
-      case WorkDone(config, replyTo) =>
-        log.debug(s"Done processing $config")
+      case WorkDone(command, replyTo) =>
+        log.debug(s"Done processing $command")
         replyTo.foreach(_ ! CommandStatus.Completed)
 
       case x => log.error(s"Unexpected message $x")
@@ -104,11 +104,11 @@ class AssemblyControllerTests extends TestKit(AssemblyControllerTests.system)
 
     val obsId = ObsId("obs0001")
 
-    // Send a setup config to the Assembly
+    // Send a setup command to the Assembly
     val setup = Setup(CommandInfo(obsId), testPrefix2).add(position.set("IR3"))
 
     assemblyController ! Submit(setup)
-    //  system.actorOf(AssemblyStatusMatcherActor.props(List(config), Set(assemblyController), self))
+    //  system.actorOf(AssemblyStatusMatcherActor.props(List(command), Set(assemblyController), self))
     within(10.seconds) {
       val accept = expectMsgType[CommandResponse]
       logger.debug(s"Accepted with (2). Received accepted from worker with current state: $accept")

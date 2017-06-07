@@ -26,11 +26,11 @@ object HcdMessages {
   sealed trait HcdMessages
 
   /**
-   * Message to submit a configuration to the HCD
+   * Message to submit a command to the HCD
    *
-   * @param config describes the setup parameters to which the HCD should be configured
+   * @param command describes the setup parameters to which the HCD should be configured
    */
-  final case class Submit(config: Setup) extends HcdMessages
+  final case class Submit(command: Setup) extends HcdMessages
 
   /**
    * Message to subscribe the sender to the HCD's state.

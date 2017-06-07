@@ -17,19 +17,19 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
   val commandInfo = CommandInfo(ObsId("001"))
 
   describe("Overall Tests") {
-    it("should work with validation issues") {
-
-      val vi: ValidationIssue = Validation.SingleConfigOnlyIssue("testing 1, 2, 3")
-
-      logger.info(s"Its: $vi")
-
-      val json = vi.toJson
-
-      logger.info(s"json: $json")
-
-      val v: ValidationIssue = json.convertTo[ValidationIssue]
-
-    }
+    //    it("should work with validation issues") {
+    //
+    //      val vi: ValidationIssue = Validation.SingleConfigOnlyIssue("testing 1, 2, 3")
+    //
+    //      logger.info(s"Its: $vi")
+    //
+    //      val json = vi.toJson
+    //
+    //      logger.info(s"json: $json")
+    //
+    //      val v: ValidationIssue = json.convertTo[ValidationIssue]
+    //
+    //    }
 
     it("should work with command status") {
       var csIn: CommandResponse = CommandStatus.Invalid(OtherIssue("No Good reasons"))

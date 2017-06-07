@@ -18,12 +18,12 @@ import scala.concurrent.{Await, Future}
 case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   /**
-   * Submits the given config to the assembly and returns the future result
-   * (Note: This assumes that the assembly will return a CommandResult for the given config)
+   * Submits the given command to the assembly and returns the future result
+   * (Note: This assumes that the assembly will return a CommandResult for the given command)
    */
-  def submit(config: Setup): Future[CommandResponse] = {
+  def submit(command: Setup): Future[CommandResponse] = {
     val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
-    (wrapper ? Submit(config)).mapTo[CommandResponse]
+    (wrapper ? Submit(command)).mapTo[CommandResponse]
   }
 }
 
@@ -36,8 +36,8 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
  */
 case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
-  def submit(config: Setup): CommandResponse = {
-    Await.result(client.submit(config), timeout.duration)
+  def submit(command: Setup): CommandResponse = {
+    Await.result(client.submit(command), timeout.duration)
   }
 }
 

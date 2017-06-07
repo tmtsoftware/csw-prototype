@@ -18,9 +18,9 @@ object HcdController {
   /**
    * Message to submit a configuration to the HCD
    *
-   * @param config describes the setup parameters to which the HCD should be configured
+   * @param command describes the setup parameters to which the HCD should be configured
    */
-  final case class Submit(config: Setup) extends HcdControllerMessage
+  final case class Submit(command: Setup) extends HcdControllerMessage
 
   // --- Inherited messages that this actor receives ---
 
@@ -54,19 +54,19 @@ trait HcdController extends PublisherActor[CurrentState] {
    * For example: def receive: Receive = controllerReceive orElse ...
    */
   protected def controllerReceive: Receive = publisherReceive orElse {
-    case Submit(config)  => process(config)
+    case Submit(setup)   => process(setup)
 
     // Can be used by related actors to post the current status
     case s: CurrentState => notifySubscribers(s)
   }
 
   /**
-   * A derived class should process the given config and, if oneway is false, either call
+   * A derived class should process the given command and, if oneway is false, either call
    * notifySubscribers() or send a CurrentState message to itself
    * (possibly from a worker actor) to indicate changes in the current HCD state.
    *
-   * @param config            the config received
+   * @param command            the command received
    */
-  protected def process(config: Setup): Unit
+  protected def process(command: Setup): Unit
 }
 

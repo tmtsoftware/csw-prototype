@@ -12,23 +12,23 @@ object AssemblyController {
   sealed trait AssemblyControllerMessage
 
   /**
-   * Message to submit a configuration to the assembly.
+   * Message to submit a command to the assembly.
    * The sender will receive CommandStatus messages.
-   * If the config is valid, a Accepted message is sent, otherwise an Error.
-   * When the work for the config has been completed, a Completed message is sent
+   * If the command is valid, a Accepted message is sent, otherwise an Error.
+   * When the work for the command has been completed, a Completed message is sent
    * (or an Error message, if an error occurred).
    *
-   * @param command the configuration to execute
+   * @param command the command to execute
    */
   case class Submit(command: ControlCommand) extends AssemblyControllerMessage
 
   /**
-   * Message to submit a oneway config to the assembly.
+   * Message to submit a oneway command to the assembly.
    * In this case, the sender will receive only an Accepted (or Error) message,
-   * indicating that config is valid (or invalid).
+   * indicating that command is valid (or invalid).
    * There will be no messages on completion.
    *
-   * @param command the configuration to execute
+   * @param command the command to execute
    */
   case class OneWay(command: ControlCommand) extends AssemblyControllerMessage
 
@@ -64,7 +64,7 @@ trait AssemblyController {
    *
    * @param s  the Setup received
    * @param oneway  true if no completed response is needed
-   * @param replyTo actorRef of the actor that submitted the config
+   * @param replyTo actorRef of the actor that submitted the command
    */
   private def setupSubmit(s: Setup, oneway: Boolean, replyTo: ActorRef): Unit = {
     val completionReplyTo = if (oneway) None else Some(replyTo)
@@ -79,7 +79,7 @@ trait AssemblyController {
    *
    * @param o  the Observe received
    * @param oneway  true if no completed response is needed
-   * @param replyTo actorRef of the actor that submitted the config
+   * @param replyTo actorRef of the actor that submitted the command
    */
   private def observeSubmit(o: Observe, oneway: Boolean, replyTo: ActorRef): Unit = {
     val completionReplyTo = if (oneway) None else Some(replyTo)
@@ -90,20 +90,20 @@ trait AssemblyController {
   }
 
   /**
-   * Called to process a setup config and reply to the given actor with the command status.
+   * Called to process a setup command and reply to the given actor with the command status.
    *
-   * @param s contains the setup configuration
+   * @param s contains the setup command
    * @param replyTo   if defined, the actor that should receive the final command status.
-   * @return a validation object that indicates if the received config is valid
+   * @return a validation object that indicates if the received command is valid
    */
   protected def setup(s: Setup, replyTo: Option[ActorRef]): Validation = Validation.Valid
 
   /**
-   * Called to process an observe config and reply to the given actor with the command status.
+   * Called to process an observe command and reply to the given actor with the command status.
    *
-   * @param o contains the observe configuration
+   * @param o contains the observe command
    * @param replyTo   if defined, the actor that should receive the final command status.
-   * @return a validation object that indicates if the received config is valid
+   * @return a validation object that indicates if the received command is valid
    */
   protected def observe(o: Observe, replyTo: Option[ActorRef]): Validation = Validation.Valid
 }

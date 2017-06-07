@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 // XXX allan: TODO: Needs to be updated to reply with CommandResult instead of CommandStatus
 
 /**
- * Distribute configs to HCDs based on the config's prefix and the prefix the HCD was registered with in the location service.
+ * Distribute configs to HCDs based on the command's prefix and the prefix the HCD was registered with in the location service.
  */
 case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaLocation]) {
 
@@ -42,7 +42,7 @@ case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaL
   }
 
   /**
-   * Returns a set of ActorRefs for the components that are resolved and match the config's prefix
+   * Returns a set of ActorRefs for the components that are resolved and match the command's prefix
    */
   private def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = locations.collect {
