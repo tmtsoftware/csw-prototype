@@ -13,13 +13,13 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
 
   private val missingKeyIssueType = classOf[MissingKeyIssue].getSimpleName
   private val wrongPrefixIssueType = classOf[WrongPrefixIssue].getSimpleName
-  private val wrongItemTypeIssueType = classOf[WrongParameterTypeIssue].getSimpleName
+  private val WrongParameterTypeIssueType = classOf[WrongParameterTypeIssue].getSimpleName
   private val wrongUnitsIssueType = classOf[WrongUnitsIssue].getSimpleName
-  private val wrongNumberOfItemsIssueType = classOf[WrongNumberOfParametersIssue].getSimpleName
+  private val WrongNumberOfParametersIssueType = classOf[WrongNumberOfParametersIssue].getSimpleName
   //  private val singleConfigOnlyIssueType = classOf[SingleConfigOnlyIssue].getSimpleName
   private val assemblyBusyIssueType = classOf[AssemblyBusyIssue].getSimpleName
   private val unresolvedLocationsIssueType = classOf[UnresolvedLocationsIssue].getSimpleName
-  private val itemValueOutOfRangeIssueType = classOf[ParameterValueOutOfRangeIssue].getSimpleName
+  private val ParameterValueOutOfRangeIssueType = classOf[ParameterValueOutOfRangeIssue].getSimpleName
   private val wrongInternalStateIssueType = classOf[WrongInternalStateIssue].getSimpleName
   private val unsupportedCommandInStateIssueType = classOf[UnsupportedCommandInStateIssue].getSimpleName
   private val unsupportedCommandIssueType = classOf[UnsupportedCommandIssue].getSimpleName
@@ -45,13 +45,13 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
   private def issueToType(obj: ValidationIssue) = obj match {
     case _: Validation.MissingKeyIssue                   => missingKeyIssueType
     case _: Validation.WrongPrefixIssue                  => wrongPrefixIssueType
-    case _: Validation.WrongParameterTypeIssue           => wrongItemTypeIssueType
+    case _: Validation.WrongParameterTypeIssue           => WrongParameterTypeIssueType
     case _: Validation.WrongUnitsIssue                   => wrongUnitsIssueType
-    case _: Validation.WrongNumberOfParametersIssue      => wrongNumberOfItemsIssueType
+    case _: Validation.WrongNumberOfParametersIssue      => WrongNumberOfParametersIssueType
     //    case _: Validation.SingleConfigOnlyIssue             => singleConfigOnlyIssueType
     case _: Validation.AssemblyBusyIssue                 => assemblyBusyIssueType
     case _: Validation.UnresolvedLocationsIssue          => unresolvedLocationsIssueType
-    case _: Validation.ParameterValueOutOfRangeIssue     => itemValueOutOfRangeIssueType
+    case _: Validation.ParameterValueOutOfRangeIssue     => ParameterValueOutOfRangeIssueType
     case _: Validation.WrongInternalStateIssue           => wrongInternalStateIssueType
     case _: Validation.UnsupportedCommandInStateIssue    => unsupportedCommandInStateIssueType
     case _: Validation.UnsupportedCommandIssue           => unsupportedCommandIssueType
@@ -68,13 +68,13 @@ object CommandsJSON extends DefaultJsonProtocol with LazyLogging {
         issue match {
           case `missingKeyIssueType`                   => MissingKeyIssue(reason)
           case `wrongPrefixIssueType`                  => WrongPrefixIssue(reason)
-          case `wrongItemTypeIssueType`                => WrongParameterTypeIssue(reason)
+          case `WrongParameterTypeIssueType`           => WrongParameterTypeIssue(reason)
           case `wrongUnitsIssueType`                   => WrongUnitsIssue(reason)
-          case `wrongNumberOfItemsIssueType`           => WrongNumberOfParametersIssue(reason)
+          case `WrongNumberOfParametersIssueType`      => WrongNumberOfParametersIssue(reason)
           //          case `singleConfigOnlyIssueType`             => SingleConfigOnlyIssue(reason)
           case `assemblyBusyIssueType`                 => AssemblyBusyIssue(reason)
           case `unresolvedLocationsIssueType`          => UnresolvedLocationsIssue(reason)
-          case `itemValueOutOfRangeIssueType`          => ParameterValueOutOfRangeIssue(reason)
+          case `ParameterValueOutOfRangeIssueType`     => ParameterValueOutOfRangeIssue(reason)
           case `wrongInternalStateIssueType`           => WrongInternalStateIssue(reason)
           case `unsupportedCommandInStateIssueType`    => UnsupportedCommandInStateIssue(reason)
           case `unsupportedCommandIssueType`           => UnsupportedCommandIssue(reason)
