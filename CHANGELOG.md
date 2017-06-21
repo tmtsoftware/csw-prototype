@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
   | Old Name  | New Name |
   | ------------- | ------------- |
   | Configurations (JConfigurations)  | Parameters (JParameters) |
-  | ConfigDSL (JConfigDSL) | ParameterSetDSL (JParameterSetDSL) |
+  | ConfigDSL (JConfigDSL) | ParameterSetDsl (JParameterSetDsl) |
   | ConfigKey  | Prefix  |
   | ControlItemSet  | ControlCommand  |
   | SequenceItemSet  | SequencerCommand  |
