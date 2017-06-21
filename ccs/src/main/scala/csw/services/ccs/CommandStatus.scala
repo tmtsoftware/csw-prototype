@@ -47,11 +47,11 @@ object CommandStatus {
    */
   case object Accepted extends CommandResponse
 
-  //  /**
-  //    * Command Completed with a result
-  //    * @param result - currently a Setup - would like to add ResultConfiguration to types in Configuration and use it here
-  //    */
-  //  final case class CompletedWithResult(result: Result) extends CommandResponse
+  //    /**
+  //      * Command Completed with a result
+  //      * @param result - currently a Setup - would like to add ResultConfiguration to types in Configuration and use it here
+  //      */
+  //    final case class CompletedWithResult(result: Result) extends CommandResponse
 
   /**
    * The command was valid when received, but is no longer valid because of itervening activities
