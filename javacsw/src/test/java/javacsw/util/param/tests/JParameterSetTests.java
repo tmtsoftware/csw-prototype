@@ -1,14 +1,14 @@
-package javacsw.util.params.tests;
+package javacsw.util.param.tests;
 
 import csw.util.param.*;
 import csw.util.param.Parameters.*;
-import javacsw.util.params.JParameters;
-import javacsw.util.params.JUnitsOfMeasure;
+import javacsw.util.param.JParameters;
+import javacsw.util.param.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;
 
-import static javacsw.util.params.JParameters.*;
+import static javacsw.util.param.JParameters.*;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;

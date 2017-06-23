@@ -1,4 +1,4 @@
-package javacsw.util.params;
+package javacsw.util.param;
 
 import csw.util.param.*;
 import csw.util.param.Events.*;

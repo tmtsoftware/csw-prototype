@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event_old.tests.JEventPubSubTest.Msg.*;
-import static javacsw.util.params.JParameters.*;
+import static javacsw.util.param.JParameters.*;
 
 
 /**

@@ -1,4 +1,4 @@
-package javacsw.util.params.tests;
+package javacsw.util.param.tests;
 
 import csw.util.param.*;
 import csw.util.param.Parameters.Observe;
@@ -7,15 +7,15 @@ import csw.util.param.Parameters.CommandInfo;
 import csw.util.param.Events.ObserveEvent;
 import csw.util.param.Events.StatusEvent;
 import csw.util.param.Events.SystemEvent;
-import javacsw.util.params.JParameters;
-import javacsw.util.params.JSubsystem;
+import javacsw.util.param.JParameters;
+import javacsw.util.param.JSubsystem;
 import org.junit.Test;
 import spray.json.JsValue;
 
 import java.util.Arrays;
 
-import static javacsw.util.params.JParameters.*;
-import static javacsw.util.params.JUnitsOfMeasure.*;
+import static javacsw.util.param.JParameters.*;
+import static javacsw.util.param.JUnitsOfMeasure.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 

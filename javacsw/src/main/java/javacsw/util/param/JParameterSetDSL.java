@@ -1,11 +1,11 @@
-package javacsw.util.params;
+package javacsw.util.param;
 
 import csw.util.param.Parameters.*;
 import csw.util.param.Parameter;
 import csw.util.param.StateVariable.*;
 import csw.util.param.Struct;
 
-import static javacsw.util.params.JParameters.*;
+import static javacsw.util.param.JParameters.*;
 
 /**
  * A Java DSL for working with parameter sets
