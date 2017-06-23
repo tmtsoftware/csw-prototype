@@ -10,7 +10,7 @@ import static javacsw.util.param.JParameters.*;
 /**
  * A Java DSL for working with parameter sets
  */
-public class JParameterSetDSL {
+public class JParameterSetDsl {
     /**
      * Returns a new Setup
      * @param info information associated with the setup

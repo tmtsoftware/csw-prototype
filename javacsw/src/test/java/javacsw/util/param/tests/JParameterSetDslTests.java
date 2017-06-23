@@ -9,7 +9,7 @@ import org.junit.Test;
 import java.util.*;
 
 import static javacsw.util.param.JParameters.*;
-import static javacsw.util.param.JParameterSetDSL.*;
+import static javacsw.util.param.JParameterSetDsl.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
