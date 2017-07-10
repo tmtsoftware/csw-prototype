@@ -536,10 +536,12 @@ class JSONTests extends FunSpec {
       val dec = StringKey("dec")
       val epoch = DoubleKey("epoch")
       val c1 = Struct("probe1").madd(ra.set("12:13:14.1"), dec.set("32:33:34.4"), epoch.set(1950.0))
-      val i1 = k1.set(c1)
+      val c2 = Struct("probe2").madd(ra.set("12:13:15.2"), dec.set("32:33:35.5"), epoch.set(1950.0))
+      val i1 = k1.set(c1, c2)
 
       val sc1 = Setup(commandInfo, ck).add(i1)
       assert(sc1(k1).head == c1)
+      assert(sc1(k1).value(1) == c2)
 
       val sc1out = ParameterSetJson.writeSequenceCommand(sc1)
 
@@ -549,10 +551,14 @@ class JSONTests extends FunSpec {
       val sc1in = ParameterSetJson.readSequenceCommand[Setup](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in(k1).head == c1)
-//      val x = sc1in.get(k1).flatMap(_.head.get(ra))
-      assert(sc1in(k1).head.get(ra).head.head == "12:13:14.1")
 
-      val sc2 = Setup(commandInfo, ck).add(k1.set(c1))
+      val raParam1 = sc1in(k1).head.get(ra).head
+      assert(raParam1.head == "12:13:14.1")
+
+      val raParam2 = sc1in(k1).value(1).get(ra).head
+      assert(raParam2.head == "12:13:15.2")
+
+      val sc2 = Setup(commandInfo, ck).add(k1.set(c1, c2))
       assert(sc2 == sc1)
     }
   }
