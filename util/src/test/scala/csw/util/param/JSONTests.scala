@@ -543,12 +543,14 @@ class JSONTests extends FunSpec {
 
       val sc1out = ParameterSetJson.writeSequenceCommand(sc1)
 
-      //      val s = sc1out.prettyPrint
-      //      println(s"XXX $s")
+      val s = sc1out.prettyPrint
+      println(s) // XXX
 
       val sc1in = ParameterSetJson.readSequenceCommand[Setup](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in(k1).head == c1)
+//      val x = sc1in.get(k1).flatMap(_.head.get(ra))
+      assert(sc1in(k1).head.get(ra).head.head == "12:13:14.1")
 
       val sc2 = Setup(commandInfo, ck).add(k1.set(c1))
       assert(sc2 == sc1)
