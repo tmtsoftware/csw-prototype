@@ -558,6 +558,8 @@ class JSONTests extends FunSpec {
       val raParam2 = sc1in(k1).value(1).get(ra).head
       assert(raParam2.head == "12:13:15.2")
 
+      assert(sc1in(k1).value(1).name == "probe2")
+
       val sc2 = Setup(commandInfo, ck).add(k1.set(c1, c2))
       assert(sc2 == sc1)
     }
