@@ -27,6 +27,12 @@ public class JCommandStatus {
    */
   public static final CommandStatus.CommandResponse Accepted = CommandStatus.Accepted$.MODULE$;
 
+  /**
+   * The command was valid when received, but is no longer valid because of itervening activities
+   */
+  public static CommandStatus.CommandResponse NoLongerValid(ValidationIssue issue) {
+    return new CommandStatus.NoLongerValid(issue);
+  }
 
   /**
    * The command has completed successfully
@@ -38,6 +44,13 @@ public class JCommandStatus {
    * Aborted means that the command/actions were stopped immediately.
    */
   public static final CommandStatus.CommandResponse Aborted = CommandStatus.Aborted$.MODULE$;
+
+  /**
+   * The command was started, but ended with error with the given message
+   */
+  public static CommandStatus.CommandResponse Error(String message) {
+    return new CommandStatus.Error(message);
+  }
 
   /**
    * The command was cancelled

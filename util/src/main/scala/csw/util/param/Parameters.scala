@@ -18,6 +18,15 @@ object Parameters {
    */
   case class Prefix(subsystem: Subsystem, prefix: String) {
     override def toString = s"[$subsystem, $prefix]"
+
+    /**
+     * Creates a Prefix from the given string
+     *
+     * @return a Prefix object parsed for the subsystem and prefix
+     */
+    def this(prefix: String) {
+      this(Prefix.subsystem(prefix), prefix)
+    }
   }
 
   /**
