@@ -107,7 +107,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   }
 
   private def validateSetup(sc: Setup): Validation = {
-    if (sc.exists(TestConfig.posName)) Valid
+    if (sc.exists(TestCommands.posName)) Valid
     else Invalid(WrongPrefixIssue("Expected a posName key"))
   }
 }
