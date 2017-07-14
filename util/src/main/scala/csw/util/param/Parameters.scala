@@ -70,7 +70,8 @@ object Parameters {
      */
     final def prefixStr: String = prefix.prefix
 
-    override def toString = s"$typeName[$subsystem, $prefixStr]$dataToString"
+    // This is the format for a Setup/Observe/Wait
+    override def toString = s"${typeName}([$subsystem, $prefixStr]$dataToString)"
   }
 
   /**
@@ -237,7 +238,7 @@ object Parameters {
      */
     protected def create(data: ParameterSet): T
 
-    protected def dataToString: String = paramSet.mkString("(", ",", ")")
+    protected def dataToString: String = paramSet.mkString("(", ", ", ")")
 
     override def toString = s"$typeName$dataToString"
 
