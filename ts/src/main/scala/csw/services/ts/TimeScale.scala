@@ -98,6 +98,6 @@ object Main extends App {
   val tokyoLocalTime = hawaiiLocalTime.withZoneSameInstant(ZoneId.of("Asia/Tokyo"))
   println(tokyoLocalTime)
 
-  val nextTrigger = new TsInstant(taii.instant.plusSeconds(3600), TAI)
+  val nextTrigger = new TsInstant(taii.instant.plusSeconds(3700), TAI)
   // TimeServiceScheduler.scheduleOnce(nextTrigger, receiver, "wake up")
 }
