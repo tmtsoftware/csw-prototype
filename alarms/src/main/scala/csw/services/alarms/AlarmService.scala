@@ -178,7 +178,8 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, autoRefres
 
   // Gets the abbreviated alarm model for the given key
   private def getAlarmSmall(key: AlarmKey): Future[AlarmModelSmall] = {
-    redisClient.hmget(key.key, "severityLevels", "acknowledge", "latched").map(AlarmModelSmall(_)).map { opt =>
+    import AlarmModel.F
+    redisClient.hmget(key.key, F.severityLevels, F.acknowledge, F.latched).map(AlarmModelSmall(_)).map { opt =>
       if (opt.isEmpty) {
         throw new RuntimeException(s"No alarm was found for key $key")
       } else opt.get
