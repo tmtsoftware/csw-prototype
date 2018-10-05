@@ -1,13 +1,13 @@
 TMT Common Software (CSW Prototype)
 =====================================
 
-Note: This is the CSW *prototype* software. The current version is being developed in the [csw-prod](https://github.com/tmtsoftware/csw-prod) repository. 
+Note: This is the CSW *prototype* software. The current version is being developed in the [csw-prod](https://github.com/tmtsoftware/csw) repository. 
 
 Common Software is the package of services and infrastructure software that integrates the TMT software systems.
 
 http://www.tmt.org
 
-See [here](https://github.com/tmtsoftware/csw/releases/download/v0.3-PDR/TMTCommonSoftwareProgramming-CSWFD_REL01_KG.pdf)
+See [here](https://github.com/tmtsoftware/csw-prototype/releases/download/v0.3-PDR/TMTCommonSoftwareProgramming-CSWFD_REL01_KG.pdf)
 for a detailed description of the CSW software.
 
 The latest API docs can always be found at http://tmtsoftware.github.io/csw/.
@@ -19,8 +19,8 @@ Version History
 
 | Date | Tag | Docs | Source | Download |
 |-----|-----|--------|-----|-----|
-| 2016-12-03 | CSW-0.3-PDR | [API](http://tmtsoftware.github.io/csw/) | [csw-0.3](https://github.com/tmtsoftware/csw/tree/v0.3-PDR)| Source: [tar.gz](https://github.com/tmtsoftware/csw/archive/v0.3-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw/archive/v0.3-PDR.zip), Scala API Docs: [tar.gz](https://github.com/tmtsoftware/csw/releases/download/v0.3-PDR/csw-0.3-scaladoc.tar.gz), Java API Docs: [tar.gz](https://github.com/tmtsoftware/csw/releases/download/v0.3-PDR/csw-0.3-javadoc.tar.gz) |
-| 2015-11-18 | CSW-0.2-PDR | [API](https://cdn.rawgit.com/tmtsoftware/csw/CSW-API-0.2-PDR/index.html) | [csw-0.2](https://github.com/tmtsoftware/csw/tree/v0.2-PDR)| Source: [tar.gz](https://github.com/tmtsoftware/csw/archive/v0.2-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw/archive/v0.2-PDR.zip), API Docs: [tar.gz](https://github.com/tmtsoftware/csw/archive/CSW-API-0.2-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw/archive/CSW-API-0.2-PDR.zip) |
+| 2016-12-03 | CSW-0.3-PDR | [API](http://tmtsoftware.github.io/csw/) | [csw-0.3](https://github.com/tmtsoftware/csw-prototype/tree/v0.3-PDR)| Source: [tar.gz](https://github.com/tmtsoftware/csw-prototype/archive/v0.3-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw-prototype/archive/v0.3-PDR.zip), Scala API Docs: [tar.gz](https://github.com/tmtsoftware/csw-prototype/releases/download/v0.3-PDR/csw-0.3-scaladoc.tar.gz), Java API Docs: [tar.gz](https://github.com/tmtsoftware/csw-prototype/releases/download/v0.3-PDR/csw-0.3-javadoc.tar.gz) |
+| 2015-11-18 | CSW-0.2-PDR | [API](https://cdn.rawgit.com/tmtsoftware/csw/CSW-API-0.2-PDR/index.html) | [csw-0.2](https://github.com/tmtsoftware/csw-prototype/tree/v0.2-PDR)| Source: [tar.gz](https://github.com/tmtsoftware/csw-prototype/archive/v0.2-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw-prototype/archive/v0.2-PDR.zip), API Docs: [tar.gz](https://github.com/tmtsoftware/csw-prototype/archive/CSW-API-0.2-PDR.tar.gz), [zip](https://github.com/tmtsoftware/csw-prototype/archive/CSW-API-0.2-PDR.zip) |
 
 Build Instructions
 ------------------

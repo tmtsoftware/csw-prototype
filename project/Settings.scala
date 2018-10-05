@@ -87,7 +87,7 @@ object Settings {
 
   lazy val siteSettings = site.settings ++ ghpages.settings ++ site.includeScaladoc() ++
     site.preprocessSite() ++ Seq(
-    git.remoteRepo := "https://github.com/tmtsoftware/csw.git"
+    git.remoteRepo := "https://github.com/tmtsoftware/csw-prototype.git"
   )
 
   def formattingPreferences: FormattingPreferences =

@@ -7,7 +7,7 @@ The last n events are always saved for reference (where n is an optional argumen
 
 Note that the tests assume the redis server is running. The host and port for the Redis instance can be configured
 in the application [config file](src/main/resources/reference.conf), or you can use the
-[trackLocation](https://github.com/tmtsoftware/csw/tree/master/apps/trackLocation) application to register a
+[trackLocation](https://github.com/tmtsoftware/csw-prototype/tree/master/apps/trackLocation) application to register a
 Redis instance with the location service and then look up the host and port to use for it.
 
 Telemetry Service
