@@ -1,7 +1,7 @@
-TMT Common Software (CSW Prototype)
+TMT Common Software (Old CSW Prototype)
 =====================================
 
-Note: This is the CSW *prototype* software. The current version is being developed in the [csw-prod](https://github.com/tmtsoftware/csw) repository. 
+Note: This is the old CSW *prototype* software. The new version can be found in the [csw](https://github.com/tmtsoftware/csw) repository. 
 
 Common Software is the package of services and infrastructure software that integrates the TMT software systems.
 
